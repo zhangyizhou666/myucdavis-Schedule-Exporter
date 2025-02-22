@@ -1,0 +1,27 @@
+{
+    "manifest_version": 3,
+    "name": "UC Davis Schedule Exporter",
+    "version": "1.0",
+    "description": "Export UC Davis schedule to calendar",
+    "permissions": [
+      "activeTab",
+      "scripting",
+      "downloads"
+    ],
+    "host_permissions": [
+      "*://*.ucdavis.edu/*"
+    ],
+    "action": {
+      "default_popup": "popup.html",
+      "default_icon": {
+        "16": "icons/icon16.png",
+        "48": "icons/icon48.png",
+        "128": "icons/icon128.png"
+      }
+    },
+    "content_scripts": [{
+      "matches": ["*://*.ucdavis.edu/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }]
+  }
