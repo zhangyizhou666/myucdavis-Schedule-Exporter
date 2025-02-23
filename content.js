@@ -46,8 +46,20 @@ function extractEventsFromPage(debug = false) {
         const courseTitle = courseItem.querySelector('.classTitle')?.textContent?.trim();
         if (!courseTitle) return;
 
+        // Extract instructor information
+        const instructorDiv = courseItem.querySelector('.classDescription a[href^="mailto:"]');
+        let instructorText = '';
+        if (instructorDiv) {
+          const name = instructorDiv.textContent.trim();
+          const email = instructorDiv.getAttribute('href').replace('mailto:', '');
+          instructorText = `\\nInstructor: ${name} (${email})`;
+        }
+
         const [courseCode, ...titleParts] = courseTitle.split(' - ');
-        const shortCode = courseCode.replace(/\s*0+(\d+[A-Z])\s*00\d/, ' $1');
+        // Format course code to maintain leading zeros in section numbers
+        const shortCode = courseCode
+          .replace(/(\w+)\s*0*(\d+[A-Z]?)\s*0*(\d+)/, (_, dept, num, section) => 
+            `${dept} ${num} ${section.padStart(3, '0')}`);
         const courseName = titleParts.join(' - ');
 
         const meetingTimesContainer = courseItem.querySelector('.data.meeting-times');
@@ -80,15 +92,18 @@ function extractEventsFromPage(debug = false) {
               const timeRange = parseTimeRange(meetingInfo.time);
               const daysList = meetingInfo.days.split('');
 
+              const locationText = meetingInfo.location ? 
+                `\\nLocation: ${meetingInfo.location}` : '';
+
               events.push({
                 type: 'recurring',
                 summary: `${shortCode} ${meetingInfo.type}`,
-                description: `${courseName}`,
+                description: `${courseName}${instructorText}${locationText}`,
                 location: meetingInfo.location || '',
                 startTime: timeRange.start,
                 endTime: timeRange.end,
                 days: daysList,
-                until: '20250320T235959'
+                until: '20250320T235959Z'
               });
             }
           });
@@ -106,14 +121,26 @@ function extractEventsFromPage(debug = false) {
             const [_, month, day, year, time, period] = examMatch;
             const examTime = convertTime12to24(`${time} ${period}`);
             
+            // Calculate UTC time (add 8 hours for PST->UTC conversion)
+            let utcHours = examTime.hours + 8;
+            let utcDay = parseInt(day);
+            if (utcHours >= 24) {
+              utcHours -= 24;
+              utcDay += 1;
+            }
+            
+            const startDate = `${year}${month.padStart(2, '0')}${utcDay.toString().padStart(2, '0')}T${utcHours.toString().padStart(2, '0')}${examTime.minutes.toString().padStart(2, '0')}00Z`;
+            const endDate = new Date(Date.UTC(year, month - 1, utcDay, utcHours, examTime.minutes));
+            endDate.setUTCHours(endDate.getUTCHours() + 2); // Add 2 hours for duration
+            const endDateStr = endDate.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+            
             events.push({
               type: 'single',
               summary: `${shortCode} Final Exam`,
               description: `Final Exam for ${courseName}`,
               location: 'TBA',
-              date: `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`,
-              startTime: `${examTime.hours.toString().padStart(2, '0')}:${examTime.minutes.toString().padStart(2, '0')}`,
-              duration: 2 // hours
+              startDate: startDate,
+              endDate: endDateStr
             });
           }
         }
