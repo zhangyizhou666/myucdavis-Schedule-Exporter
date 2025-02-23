@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "UC Davis Schedule Exporter",
     "version": "1.0",
-    "description": "Exports your UC Davis schedule to Apple/Google calendar, click the extension icon to export, and click the downloaded ics file to import to your calendar.",
+    "description": "Exports UC Davis schedule to calendar, click the extension icon to download the ics file.",
     "permissions": [
       "activeTab",
       "scripting",
