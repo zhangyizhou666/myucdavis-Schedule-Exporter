@@ -3,21 +3,130 @@
 <head>
   <title>UC Davis Schedule Exporter</title>
   <style>
-    body {
-      width: 300px;
-      padding: 10px;
+    :root {
+      --ucd-blue: #002855;
+      --ucd-gold: #FFBF00;
+      --light-gray: #f5f5f5;
+      --text-color: #333333;
+      --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
+    
+    body {
+      width: 320px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--light-gray);
+      color: var(--text-color);
+    }
+    
+    .container {
+      padding: 20px;
+    }
+    
+    .header {
+      background-color: var(--ucd-blue);
+      color: white;
+      padding: 15px 20px;
+      border-radius: 8px 8px 0 0;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+    }
+    
+    h2 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 600;
+    }
+    
+    .subtitle {
+      font-size: 12px;
+      opacity: 0.8;
+      margin-top: 5px;
+    }
+    
+    .logo {
+      width: 36px;
+      height: 36px;
+      margin-right: 12px;
+      vertical-align: middle;
+    }
+    
     button {
       width: 100%;
-      padding: 8px;
-      margin: 5px 0;
+      padding: 12px;
+      margin: 12px 0;
+      background-color: var(--ucd-blue);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow);
+    }
+    
+    button:hover {
+      background-color: #003366;
+      transform: translateY(-2px);
+    }
+    
+    button:active {
+      transform: translateY(1px);
+    }
+    
+    .btn-accent {
+      background-color: var(--ucd-gold);
+      color: var(--ucd-blue);
+    }
+    
+    .btn-accent:hover {
+      background-color: #FFD34D;
+    }
+    
+    #status {
+      background-color: white;
+      border-radius: 6px;
+      padding: 12px;
+      margin-top: 15px;
+      min-height: 20px;
+      font-size: 14px;
+      border-left: 4px solid var(--ucd-gold);
+      box-shadow: var(--shadow);
+    }
+    
+    .status-success {
+      border-left-color: #4CAF50 !important;
+    }
+    
+    .status-error {
+      border-left-color: #F44336 !important;
+    }
+    
+    .footer {
+      margin-top: 20px;
+      font-size: 11px;
+      text-align: center;
+      color: #666;
     }
   </style>
 </head>
 <body>
-  <h2>UC Davis Schedule Exporter</h2>
-  <button id="extractEvents">Export Schedule</button>
-  <div id="status"></div>
+  <div class="header">
+    <h2><img src="icons/icon48.png" alt="UC Davis" class="logo">UC Davis Schedule Exporter</h2>
+    <div class="subtitle">Export your schedule to your favorite calendar</div>
+  </div>
+  
+  <div class="container">
+    <button id="extractEvents" class="btn-accent">Export to Calendar</button>
+    <div id="status">Ready to export your schedule</div>
+    
+    <div class="footer">
+      This extension is not affiliated with UC Davis
+    </div>
+  </div>
+  
   <script src="popup.js"></script>
 </body>
 </html>

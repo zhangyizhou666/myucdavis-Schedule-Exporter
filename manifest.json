@@ -5,7 +5,6 @@
     "description": "Exports UC Davis schedule to calendar, click the extension icon to download the ics file.",
     "permissions": [
       "activeTab",
-      "scripting",
       "downloads"
     ],
     "host_permissions": [
