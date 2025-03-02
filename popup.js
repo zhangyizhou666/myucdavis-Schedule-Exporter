@@ -2,6 +2,10 @@
 document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('extractEvents').addEventListener('click', async () => {
     try {
+      const statusElement = document.getElementById('status');
+      statusElement.textContent = 'Extracting schedule...';
+      statusElement.className = '';
+      
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       const response = await chrome.tabs.sendMessage(tab.id, { 
         action: 'extractEvents',
@@ -9,17 +13,19 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       
       if (response.error) {
-        document.getElementById('status').textContent = `Error: ${response.error}`;
+        statusElement.textContent = `Error: ${response.error}`;
+        statusElement.className = 'status-error';
         return;
       }
 
       if (!response.events || response.events.length === 0) {
-        document.getElementById('status').textContent = 'No events found';
+        statusElement.textContent = 'No events found';
+        statusElement.className = 'status-error';
         return;
       }
 
-      document.getElementById('status').textContent = `Found ${response.events.length} events! Generating ICS file...`;
-
+      statusElement.textContent = `Found ${response.events.length} events! Generating ICS file...`;
+      
       const icsContent = generateICS(response.events);
       const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
       const url = URL.createObjectURL(blob);
@@ -28,11 +34,20 @@ document.addEventListener('DOMContentLoaded', function() {
         url: url,
         filename: 'ucdavis-schedule.ics',
         saveAs: true
+      }, (downloadId) => {
+        if (chrome.runtime.lastError) {
+          statusElement.textContent = `Error: ${chrome.runtime.lastError.message}`;
+          statusElement.className = 'status-error';
+        } else {
+          statusElement.textContent = 'Schedule exported successfully! Open the file in your calendar app.';
+          statusElement.className = 'status-success';
+        }
       });
 
     } catch (error) {
       console.error('Error in popup script:', error);
       document.getElementById('status').textContent = `Error: ${error.message}`;
+      document.getElementById('status').className = 'status-error';
     }
   });
 });
@@ -50,9 +65,6 @@ function generateICS(events) {
     if (event.type === 'recurring') {
       // Convert days to correct format
       const dayMap = { 'M': 'MO', 'T': 'TU', 'W': 'WE', 'R': 'TH', 'F': 'FR' };
-      const byday = event.days.map(d => dayMap[d]).join(',');
-
-      const baseDate = new Date(2025, 0, 6); // Start with January 6, 2025 (Monday)
       
       // For each day the class meets
       event.days.forEach(day => {
@@ -64,13 +76,14 @@ function generateICS(events) {
           'R': 3,
           'F': 4
         }[day];
-
+        
+        const baseDate = new Date(2025, 0, 6); // Start with January 6, 2025 (Monday)
         const startDate = new Date(baseDate);
         startDate.setDate(startDate.getDate() + daysToAdd);
-
+        
         const [startHours, startMinutes] = event.startTime.split(':').map(Number);
         const [endHours, endMinutes] = event.endTime.split(':').map(Number);
-
+        
         startDate.setHours(startHours, startMinutes);
         const endDate = new Date(startDate);
         endDate.setHours(endHours, endMinutes);
@@ -86,21 +99,8 @@ function generateICS(events) {
           'END:VEVENT'
         ]);
       });
-    } else if (event.type === 'single') {
-      const examDate = new Date(`${event.date}T${event.startTime}`);
-      const endDate = new Date(examDate);
-      endDate.setHours(endDate.getHours() + event.duration);
-
-      icsContent = icsContent.concat([
-        'BEGIN:VEVENT',
-        `SUMMARY:${event.summary}`,
-        `DESCRIPTION:${event.description}`,
-        `DTSTART;TZID=America/Los_Angeles:${formatLocalDateTime(examDate)}`,
-        `DTEND;TZID=America/Los_Angeles:${formatLocalDateTime(endDate)}`,
-        `LOCATION:${event.location}`,
-        'END:VEVENT'
-      ]);
     }
+    // Single events (like final exams) are now handled in the content script
   });
 
   icsContent.push('END:VCALENDAR');
