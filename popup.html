@@ -110,6 +110,62 @@
       text-align: center;
       color: #666;
     }
+    
+    .toggle-container {
+      display: flex;
+      align-items: center;
+      margin: 8px 0;
+    }
+    
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 20px;
+      margin-right: 10px;
+    }
+    
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 20px;
+    }
+    
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+      background-color: var(--ucd-blue);
+    }
+    
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+    
+    .toggle-label {
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
@@ -119,6 +175,14 @@
   </div>
   
   <div class="container">
+    <div class="toggle-container">
+      <label class="toggle-switch">
+        <input type="checkbox" id="registeredOnly" checked>
+        <span class="slider"></span>
+      </label>
+      <span class="toggle-label">Export registered courses only</span>
+    </div>
+    
     <button id="extractEvents" class="btn-accent">Export to Calendar</button>
     <div id="status">Ready to export your schedule</div>
     

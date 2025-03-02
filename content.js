@@ -24,48 +24,83 @@ function parseTimeRange(timeText) {
   };
 }
 
-function extractEventsFromPage(debug = false) {
+function getQuarterDates() {
+  // Look for the term selector text
+  const termSelectorElement = document.getElementById('TermSelectorText2');
+  if (!termSelectorElement) {
+    console.log('Term selector not found, using default dates');
+    return {
+      startDate: '20250331', // Default: March 31, 2025 (Spring Quarter begins)
+      endDate: '20250605',   // Default: June 5, 2025 (Spring Instruction ends)
+      untilDate: '20250605T235959Z' // Default until date
+    };
+  }
+  
+  const termText = termSelectorElement.textContent.trim();
+  console.log(`Detected term: ${termText}`);
+  
+  // Set dates based on academic calendar
+  if (termText.includes('Spring') && termText.includes('2025')) {
+    return {
+      startDate: '20250331', // March 31, 2025 (Spring Instruction begins)
+      endDate: '20250605',   // June 5, 2025 (Spring Instruction ends)
+      untilDate: '20250605T235959Z'
+    };
+  } 
+  else if (termText.includes('Winter') && termText.includes('2025')) {
+    return {
+      startDate: '20250106', // January 6, 2025 (Winter Instruction begins)
+      endDate: '20250314',   // March 14, 2025 (Winter Instruction ends)
+      untilDate: '20250314T235959Z'
+    };
+  }
+  else if (termText.includes('Fall') && termText.includes('2024')) {
+    return {
+      startDate: '20240925', // September 25, 2024 (Fall Instruction begins)
+      endDate: '20241206',   // December 6, 2024 (Fall Instruction ends)
+      untilDate: '20241206T235959Z'
+    };
+  }
+  else if (termText.includes('Fall') && termText.includes('2025')) {
+    return {
+      startDate: '20250924', // September 24, 2025 (Fall Instruction begins)
+      endDate: '20251205',   // December 5, 2025 (Fall Instruction ends)
+      untilDate: '20251205T235959Z'
+    };
+  }
+  // Default to Spring 2025 if no match
+  return {
+    startDate: '20250331', // March 31, 2025 (Spring Instruction begins)
+    endDate: '20250605',   // June 5, 2025 (Spring Instruction ends)
+    untilDate: '20250605T235959Z'
+  };
+}
+
+function extractEventsFromPage(options = {}) {
   const events = [];
-  const finalExamDates = [];
-  console.log('Starting event extraction...');
+  const registeredOnly = options.registeredOnly !== false; // Default to true if not specified
+  console.log(`Starting extraction with registeredOnly=${registeredOnly}`);
+  
+  // Get quarter dates from the page or use defaults
+  const quarterDates = getQuarterDates();
+  console.log('Quarter dates:', quarterDates);
   
   try {
-    const courseItems = document.querySelectorAll('div[id^="t"][class*="CourseItem"]');
-    console.log(`Found ${courseItems.length} total course items`);
-    
-    // First pass: collect all final exam dates
-    courseItems.forEach(courseItem => {
-      const isRegistered = courseItem.querySelector('div.statusIndicator.registered');
-      if (!isRegistered) return;
-      
-      const finalExamElement = Array.from(courseItem.querySelectorAll('div')).find(div => 
-        div.textContent?.includes('Final Exam:')
-      );
-      
-      if (finalExamElement) {
-        const examMatch = finalExamElement.textContent.match(/Final Exam:\s*(\d{1,2})\/(\d{1,2})\/(\d{4})\s*(\d{1,2}:\d{2})\s*(PM|AM)/i);
-        if (examMatch) {
-          const [_, month, day, year, time, period] = examMatch;
-          const examTime = convertTime12to24(`${time} ${period}`);
-          const examDate = new Date(year, month - 1, day, examTime.hours, examTime.minutes);
-          finalExamDates.push(examDate);
-        }
-      }
+    // Find all course items that are NOT in the SaveForLaterCourses container
+    const allCourseItems = document.querySelectorAll('div[id^="t"][class*="CourseItem"]');
+    const courseItems = Array.from(allCourseItems).filter(item => {
+      // Check if this item is inside a SaveForLaterCourses container
+      return !item.closest('#SaveForLaterCourses');
     });
     
-    // Find earliest final exam date if any exist
-    //let untilDate = '20250320T235959';
-    if (finalExamDates.length > 0) {
-      const earliestExam = new Date(Math.min(...finalExamDates.map(d => d.getTime())));
-      untilDate = `${earliestExam.getFullYear()}${(earliestExam.getMonth() + 1).toString().padStart(2, '0')}${(earliestExam.getDate()-2).toString().padStart(2, '0')}T235959`;
-    }
+    console.log(`Found ${courseItems.length} course items (excluding saved for later courses)`);
     
-    // Second pass: extract course information
+    // Extract course information
     courseItems.forEach((courseItem, index) => {
       try {
         const isRegistered = courseItem.querySelector('div.statusIndicator.registered');
-        if (!isRegistered) {
-          if (debug) console.log('Skipping unregistered course');
+        if (registeredOnly && !isRegistered) {
+          console.log('Skipping unregistered course');
           return;
         }
         
@@ -126,40 +161,12 @@ function extractEventsFromPage(debug = false) {
                 startTime: timeRange.start,
                 endTime: timeRange.end,
                 days: daysList,
-                until: untilDate
+                quarterStart: quarterDates.startDate,
+                until: quarterDates.untilDate
               });
             }
           });
         }
-        
-        // Skip final exam extraction for now since Google Calendar has issues with it
-        // We'll keep this commented in case we want to re-enable later
-        /*
-        // Final exam handling
-        const finalExamElement = Array.from(courseItem.querySelectorAll('div')).find(div => 
-          div.textContent?.includes('Final Exam:')
-        );
-        
-        if (finalExamElement) {
-          const examMatch = finalExamElement.textContent.match(/Final Exam:\s*(\d{1,2})\/(\d{1,2})\/(\d{4})\s*(\d{1,2}:\d{2})\s*(PM|AM)/i);
-          
-          if (examMatch) {
-            const [_, month, day, year, time, period] = examMatch;
-            const examTime = convertTime12to24(`${time} ${period}`);
-            
-            events.push({
-              type: 'single',
-              summary: `${shortCode} Final Exam`,
-              description: `Final Exam for ${courseName}`,
-              location: 'TBA',
-              date: `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`,
-              startTime: `${examTime.hours.toString().padStart(2, '0')}:${examTime.minutes.toString().padStart(2, '0')}`,
-              duration: 2 // hours
-            });
-          }
-        }
-        */
-        
       } catch (courseError) {
         console.error(`Error processing course item ${index + 1}:`, courseError);
       }
@@ -173,16 +180,19 @@ function extractEventsFromPage(debug = false) {
   return events;
 }
 
-
 // Message listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'extractEvents') {
     try {
-      const events = extractEventsFromPage(request.debug);
+      const events = extractEventsFromPage({
+        debug: request.debug,
+        registeredOnly: request.registeredOnly
+      });
+      
       if (events.length > 0) {
         sendResponse({ events });
       } else {
-        sendResponse({ error: 'No registered courses found on the page' });
+        sendResponse({ error: 'No courses found on the page' });
       }
     } catch (error) {
       console.error('Error during extraction:', error);

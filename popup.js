@@ -6,10 +6,14 @@ document.addEventListener('DOMContentLoaded', function() {
       statusElement.textContent = 'Extracting schedule...';
       statusElement.className = '';
       
+      // Get the toggle value for registered only
+      const registeredOnly = document.getElementById('registeredOnly').checked;
+      
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       const response = await chrome.tabs.sendMessage(tab.id, { 
         action: 'extractEvents',
-        debug: true
+        debug: true,
+        registeredOnly: registeredOnly
       });
       
       if (response.error) {
@@ -39,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
           statusElement.textContent = `Error: ${chrome.runtime.lastError.message}`;
           statusElement.className = 'status-error';
         } else {
-          statusElement.textContent = 'Schedule exported successfully! Open the file in your calendar app.';
+          statusElement.textContent = 'Schedule exported successfully!';
           statusElement.className = 'status-success';
         }
       });
@@ -77,9 +81,30 @@ function generateICS(events) {
           'F': 4
         }[day];
         
-        const baseDate = new Date(2025, 0, 6); // Start with January 6, 2025 (Monday)
+        // Parse the quarter start date
+        const year = parseInt(event.quarterStart.substring(0, 4));
+        const month = parseInt(event.quarterStart.substring(4, 6)) - 1; // 0-based months
+        const date = parseInt(event.quarterStart.substring(6, 8));
+        
+        // Create base date for first Monday of the quarter
+        const baseDate = new Date(year, month, date);
+        
+        // Adjust for classes that start on different days of the week
+        // If the quarter starts on a day other than Monday, we need to find the first occurrence
+        // of each class day
+        const startDayOfWeek = baseDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+        let adjustedDaysToAdd = daysToAdd;
+        
+        // If quarter starts on Monday (1), no adjustment needed
+        // If quarter starts on Tuesday (2), we need to add 6 days to get to Monday, then apply daysToAdd
+        // If quarter starts on Wednesday (3), we need to add 5 days to get to Monday, etc.
+        if (startDayOfWeek !== 1) { // If not Monday
+          const daysToNextMonday = (8 - startDayOfWeek) % 7; // Days to next Monday
+          adjustedDaysToAdd = (daysToAdd + daysToNextMonday) % 7;
+        }
+        
         const startDate = new Date(baseDate);
-        startDate.setDate(startDate.getDate() + daysToAdd);
+        startDate.setDate(startDate.getDate() + adjustedDaysToAdd);
         
         const [startHours, startMinutes] = event.startTime.split(':').map(Number);
         const [endHours, endMinutes] = event.endTime.split(':').map(Number);
@@ -100,7 +125,6 @@ function generateICS(events) {
         ]);
       });
     }
-    // Single events (like final exams) are now handled in the content script
   });
 
   icsContent.push('END:VCALENDAR');
