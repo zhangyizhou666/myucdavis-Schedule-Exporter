@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "UC Davis Schedule Exporter",
-    "version": "1.0",
+    "version": "1.1",
     "description": "Exports UC Davis schedule to calendar, click the extension icon to download the ics file.",
     "permissions": [
       "activeTab",

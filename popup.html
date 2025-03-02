@@ -28,7 +28,7 @@
       background-color: var(--ucd-blue);
       color: white;
       padding: 15px 20px;
-      border-radius: 8px 8px 0 0;
+      border-radius: 0; /* Changed from 8px 8px 0 0 to remove rounded corners */
       margin-bottom: 20px;
       box-shadow: var(--shadow);
     }
@@ -37,6 +37,8 @@
       margin: 0;
       font-size: 20px;
       font-weight: 600;
+      display: flex;
+      align-items: center;
     }
     
     .subtitle {
