@@ -117,8 +117,12 @@ function extractEventsFromPage(options = {}) {
         }
         
         const [courseCode, ...titleParts] = courseTitle.split(' - ');
-        // Format course code to match desired format
-        const shortCode = courseCode.replace(/(\w+)\s0*(\d+[A-Z]?)\s0*(\d+)/, "$1 $2");
+        
+        // Format course code to include section number as "ECS032 001"
+        const formattedCode = courseCode.replace(/(\w+)\s*0*(\d+[A-Z]?)\s*0*(\d+)/, (match, dept, num, section) => {
+          return `${dept}${num} ${section.padStart(3, '0')}`;
+        });
+        
         const courseName = titleParts.join(' - ');
         
         const meetingTimesContainer = courseItem.querySelector('.data.meeting-times');
@@ -155,7 +159,7 @@ function extractEventsFromPage(options = {}) {
               
               events.push({
                 type: 'recurring',
-                summary: `${shortCode} ${meetingInfo.type}`,
+                summary: `${formattedCode} ${meetingInfo.type}`,
                 description: `${courseName}${instructorText}${locationText}`,
                 location: meetingInfo.location || '',
                 startTime: timeRange.start,
