@@ -253,6 +253,25 @@ function addScheduleMateStyles() {
       z-index: 10 !important;
     }
     
+    /* Late night class indicator */
+    .schedule-mate-late-night-indicator {
+      background-color: #E1D9F2 !important;
+      color: #4A235A !important;
+      padding: 5px 8px !important;
+      margin: 5px 0 !important;
+      border-radius: 4px !important;
+      border-left: 4px solid #4A235A !important;
+      font-weight: bold !important;
+      font-size: 14px !important;
+      display: flex !important;
+      align-items: center !important;
+      width: calc(100% - 20px) !important;
+      box-sizing: border-box !important;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12) !important;
+      position: relative !important;
+      z-index: 10 !important;
+    }
+    
     /* Status labels - positioned at the bottom left */
     .schedule-mate-status-label {
       position: absolute !important;
@@ -661,14 +680,6 @@ function displayRMPData() {
       difficultySpan.textContent = `${profData.diff}`;
       difficultySpan.title = 'Course Difficulty Rating';
       
-      // Add RMP link
-      const rmpLink = document.createElement('a');
-      rmpLink.href = `https://www.ratemyprofessors.com/professor?tid=${profData.url}`;
-      rmpLink.target = '_blank';
-      rmpLink.className = 'schedule-mate-rmp-link';
-      rmpLink.textContent = '📊';
-      rmpLink.title = 'View on RateMyProfessor';
-      
       // Add Google search link
       const googleLink = document.createElement('a');
       googleLink.href = googleSearchUrl;
@@ -681,8 +692,6 @@ function displayRMPData() {
       ratingElement.appendChild(qualitySpan);
       ratingElement.appendChild(document.createTextNode(' / '));
       ratingElement.appendChild(difficultySpan);
-      ratingElement.appendChild(document.createTextNode(' '));
-      ratingElement.appendChild(rmpLink);
       ratingElement.appendChild(document.createTextNode(' | '));
       ratingElement.appendChild(googleLink);
       
@@ -1085,11 +1094,13 @@ function updateCourseUI(course) {
   course.setAttribute('data-schedule-mate-processed', 'true');
 }
 
-// Check if a course has early morning meetings (before or at 9 AM)
+// Check if a course has early morning or late night meetings
 function checkForEarlyMorningClass(course) {
   const meetings = course.querySelectorAll('.meeting-item');
   let hasEarlyMorning = false;
+  let hasLateNight = false;
   let earliestTime = null;
+  let latestTime = null;
   
   meetings.forEach(meeting => {
     const divs = meeting.querySelectorAll('div');
@@ -1104,9 +1115,10 @@ function checkForEarlyMorningClass(course) {
     });
     
     if (timeText) {
-      // Parse the start time
-      const [startTime12] = timeText.split(' - ');
+      // Parse the start and end time
+      const [startTime12, endTime12] = timeText.split(' - ');
       const startTime = convertTime12to24(startTime12);
+      const endTime = convertTime12to24(endTime12);
       
       // Check if it's at or before 9 AM (9:00)
       if (startTime.hours <= 9) {
@@ -1120,6 +1132,20 @@ function checkForEarlyMorningClass(course) {
         }
         
         console.log(`ScheduleMate: Early morning class detected! Starts at ${startTime.hours}:${startTime.minutes.toString().padStart(2, '0')}`);
+      }
+      
+      // Check if it's at or after 6 PM (18:00)
+      if (startTime.hours >= 18) {
+        hasLateNight = true;
+        
+        // Track the latest time for display
+        if (!latestTime || 
+            endTime.hours > latestTime.hours || 
+            (endTime.hours === latestTime.hours && endTime.minutes > latestTime.minutes)) {
+          latestTime = endTime;
+        }
+        
+        console.log(`ScheduleMate: Late night class detected! Starts at ${startTime.hours}:${startTime.minutes.toString().padStart(2, '0')}`);
       }
     }
   });
@@ -1142,12 +1168,40 @@ function checkForEarlyMorningClass(course) {
     // Create new indicator
     const indicator = document.createElement('div');
     indicator.className = 'schedule-mate-early-morning-indicator';
-    indicator.innerHTML = `⏰ Early Class (${formattedTime})`;
+    indicator.innerHTML = `⏰ Early Morning Class (${formattedTime})`;
+    indicator.dataset.timeType = 'early'; // Add data attribute for filtering
     
     // Add it to the course container
     container.prepend(indicator);
     
     console.log('ScheduleMate: Added early morning indicator');
+  }
+  
+  if (hasLateNight && latestTime) {
+    // Format time for display
+    const displayHour = latestTime.hours % 12 || 12; // Convert 0 to 12 for 12 AM
+    const amPm = latestTime.hours < 12 ? 'AM' : 'PM';
+    const formattedTime = `${displayHour}:${latestTime.minutes.toString().padStart(2, '0')} ${amPm}`;
+    
+    // Create a more prominent late night indicator
+    const container = course.querySelector('.course-container') || course;
+    
+    // Remove any existing indicators first
+    const existingIndicator = container.querySelector('.schedule-mate-late-night-indicator');
+    if (existingIndicator) {
+      existingIndicator.remove();
+    }
+    
+    // Create new indicator
+    const indicator = document.createElement('div');
+    indicator.className = 'schedule-mate-late-night-indicator';
+    indicator.innerHTML = `🌙 Late Night Class (${formattedTime})`;
+    indicator.dataset.timeType = 'late'; // Add data attribute for filtering
+    
+    // Add it to the course container
+    container.prepend(indicator);
+    
+    console.log('ScheduleMate: Added late night indicator');
   }
 }
 
@@ -1495,7 +1549,7 @@ function addSortButton() {
   }
 }
 
-// Add button to reload RMP data
+// Add button to hide early/late classes
 function addRMPReloadButton() {
   // Remove any existing RMP reload buttons
   const existingButton = document.querySelector('.schedule-mate-rmp-reload-button');
@@ -1505,22 +1559,96 @@ function addRMPReloadButton() {
   const existingBrowseButton = document.querySelector('.schedule-mate-browse-rmp-button');
   if (existingBrowseButton) existingBrowseButton.remove();
   
-  const reloadButton = document.createElement('button');
-  reloadButton.className = 'schedule-mate-rmp-reload-button';
-  reloadButton.textContent = 'Reload RMP Data';
-  reloadButton.addEventListener('click', () => {
-    // Show loading notification
-    showNotification('Reloading RateMyProfessor data...', 5000);
+  // Create hide early/late classes button
+  const hideButton = document.createElement('button');
+  hideButton.className = 'schedule-mate-rmp-reload-button'; // Reuse the same class for positioning
+  hideButton.textContent = 'Hide Early/Late Classes';
+  hideButton.title = 'Hide or show early morning and late night classes';
+  
+  // Track state
+  hideButton.dataset.hidden = 'false';
+  
+  hideButton.addEventListener('click', () => {
+    const isHidden = hideButton.dataset.hidden === 'true';
     
-    // Clear existing RMP displays
-    clearRMPDisplays();
+    // Toggle state
+    hideButton.dataset.hidden = isHidden ? 'false' : 'true';
+    hideButton.textContent = isHidden ? 'Hide Early/Late Classes' : 'Show Early/Late Classes';
     
-    // Reload data
-    loadRMPData();
+    // Show notification
+    showNotification(isHidden ? 'Showing all classes' : 'Hiding early morning and late night classes', 3000);
+    
+    // Toggle visibility of early/late classes
+    toggleEarlyLateClasses(!isHidden); // !isHidden because we're toggling to the new state
   });
   
-  document.body.appendChild(reloadButton);
-  console.log('ScheduleMate: Added RMP reload button');
+  document.body.appendChild(hideButton);
+  console.log('ScheduleMate: Added Hide Early/Late Classes button');
+}
+
+// Toggle visibility of early/late classes
+function toggleEarlyLateClasses(hide) {
+  // Find all courses with early/late indicators
+  const earlyIndicators = document.querySelectorAll('.schedule-mate-early-morning-indicator');
+  const lateIndicators = document.querySelectorAll('.schedule-mate-late-night-indicator');
+  
+  let earlyCount = 0;
+  let lateCount = 0;
+  
+  // Function to toggle a course container
+  const toggleCourse = (indicator, hide) => {
+    // Find the parent course container
+    const courseContainer = indicator.closest('.course-container');
+    
+    if (courseContainer) {
+      if (hide) {
+        courseContainer.style.display = 'none';
+        // Also add a data attribute so we can track which courses are hidden
+        courseContainer.dataset.scheduleMateSuppressed = 'true';
+      } else {
+        courseContainer.style.display = '';
+        // Remove the data attribute when showing
+        delete courseContainer.dataset.scheduleMateSuppressed;
+      }
+      return true; // Container was found and toggled
+    } else {
+      console.warn('ScheduleMate: Could not find course container for indicator', indicator);
+      // As a fallback, try to find the parent with the most generic approach
+      let parent = indicator.parentElement;
+      while (parent && !parent.classList.contains('course-container') && parent !== document.body) {
+        parent = parent.parentElement;
+      }
+      
+      if (parent && parent !== document.body) {
+        console.log('ScheduleMate: Found alternative container', parent);
+        if (hide) {
+          parent.style.display = 'none';
+          parent.dataset.scheduleMateSuppressed = 'true';
+        } else {
+          parent.style.display = '';
+          delete parent.dataset.scheduleMateSuppressed;
+        }
+        return true; // Container was found and toggled with fallback
+      }
+    }
+    return false; // Container not found
+  };
+  
+  // Toggle early morning classes
+  earlyIndicators.forEach(indicator => {
+    if (toggleCourse(indicator, hide)) {
+      earlyCount++;
+    }
+  });
+  
+  // Toggle late night classes
+  lateIndicators.forEach(indicator => {
+    if (toggleCourse(indicator, hide)) {
+      lateCount++;
+    }
+  });
+  
+  console.log(`ScheduleMate: ${hide ? 'Hid' : 'Showed'} ${earlyCount} early and ${lateCount} late classes`);
 }
 
 // Clear existing RMP data displays
