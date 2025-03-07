@@ -1,20 +1,43 @@
-# UC Davis Schedule Exporter
+# ScheduleMate: UC Davis Schedule Enhancement Tool
 
-A Chrome extension that exports your UC Davis class schedule to standard iCalendar (.ics) format for easy import into Google Calendar, Apple Calendar, Outlook, and other calendar applications.
+A Chrome extension that enhances your UC Davis Schedule Builder experience with color coding, professor ratings, time management tools, and calendar export functionality.
 
 ## Features
 
-- **Easy One-Click Export**: Quickly export your schedule with a single click
+### Calendar Integration
+- **Easy Schedule Export**: Export your class schedule to standard iCalendar (.ics) format
+- **Calendar Compatibility**: Import into Google Calendar, Apple Calendar, Outlook, and other applications
 - **Quarter Detection**: Automatically detects current quarter and sets appropriate dates
 - **Instructor Information**: Includes instructor names and email addresses in events
-- **Clean Interface**: Modern interface with UC Davis colors and styling
-- **Flexible Options**: Choose to export all courses or only registered courses
-- **Compatible**: Works with all major calendar applications
+
+### Visual Enhancements
+- **Course Color Coding**:
+  - **Blue**: Courses already in your schedule
+  - **Green**: Available courses with open seats
+  - **Yellow**: Full courses (no available seats)
+  - **Red**: Courses that conflict with your current schedule
+- **Status Labels**: Clear indicators showing course status in the bottom left corner
+- **Sort by Color**: Organize courses with a convenient button that sorts by availability
+
+### Professor Ratings
+- **RateMyProfessor Integration**: View quality and difficulty ratings for professors
+- **Google Search Links**: Easy access to search for professors not in the database
+- **User-Added Ratings**: Add your own ratings for professors
+
+### Time Management
+- **Early Morning Detection**: Highlights classes that start at or before 9:00 AM
+- **Late Night Detection**: Highlights classes that start at or after 6:00 PM
+- **Hide/Show Functionality**: Toggle visibility of early morning and late night classes
+
+### Interface Improvements
+- **Modern UI**: Clean, responsive interface with UC Davis colors
+- **Notification System**: Elegant notifications for user feedback
+- **Collapsible Details**: Keep course information organized
 
 ## Installation
 
 ### From Chrome Web Store
-1. Visit the [UC Davis Schedule Exporter](https://chrome.google.com/webstore/detail/uc-davis-schedule-exporter/xxxxx) in the Chrome Web Store
+1. Visit the [ScheduleMate Extension](https://chrome.google.com/webstore/detail/schedulemate/xxxxx) in the Chrome Web Store
 2. Click "Add to Chrome"
 3. Confirm the installation when prompted
 
@@ -27,49 +50,29 @@ A Chrome extension that exports your UC Davis class schedule to standard iCalend
 
 ## Usage
 
+### Calendar Export
 1. Log in to your UC Davis Schedule Builder
-2. Click the UC Davis Schedule Exporter icon in your Chrome toolbar
+2. Click the ScheduleMate icon in your Chrome toolbar
 3. Choose whether to export all courses or only registered courses
 4. Click "Export to Calendar"
-5. Select where to save the .ics file
-6. Import the .ics file into your preferred calendar application
+5. Import the .ics file into your preferred calendar application
 
-## How It Works
+### Color Coding and Schedule Management
+- **Automatic Color Coding**: Courses are automatically color-coded based on their status
+- **Conflict Detection**: Courses that conflict with your schedule are highlighted in red
+- **Sort Button**: Use the "Sort by Color" button in the bottom right to organize courses by availability
 
-The extension:
-1. Extracts course information from your current Schedule Builder page
-2. Identifies class times, locations, and instructor information
-3. Creates recurring calendar events for each class session
-4. Packages everything in standard iCalendar format
-5. Generates a downloadable .ics file
+### Professor Ratings
+- **Automatic Display**: Professor ratings appear next to professor names when available
+- **Google Search**: Click "Google" link to search for professor ratings when not in database
 
-## Importing to Calendar Applications
-
-### Google Calendar
-1. Open [Google Calendar](https://calendar.google.com/)
-2. Click the "+" icon next to "Other calendars"
-3. Select "Import"
-4. Upload the .ics file
-5. Choose which calendar to add the events to
-6. Click "Import"
-
-### Apple Calendar
-1. Open Apple Calendar
-2. Select File → Import
-3. Choose the .ics file
-4. Select which calendar to add the events to
-5. Click "Import"
-
-### Outlook
-1. Open Outlook
-2. Select File → Open & Export → Import/Export
-3. Choose "Import an iCalendar (.ics) or vCalendar file (.vcs)"
-4. Browse to and select the .ics file
-5. Choose to add as a new calendar or import to an existing calendar
+### Time Management
+- **Time Indicators**: Early morning classes show a ⏰ icon, late night classes show a 🌙 icon
+- **Time Filtering**: Use "Hide Early/Late Classes" button to toggle visibility of inconvenient class times
 
 ## Privacy
 
-The UC Davis Schedule Exporter extension:
+ScheduleMate:
 - Only accesses data on UC Davis websites
 - Does not collect or transmit any personal information
 - Works entirely within your browser
@@ -78,6 +81,7 @@ The UC Davis Schedule Exporter extension:
 ## Permissions
 
 - **activeTab**: To access the current Schedule Builder page
+- **storage**: To save your preferences and user-added professor ratings
 - **downloads**: To save the .ics file to your computer
 - **host permissions for ucdavis.edu**: To run on the Schedule Builder website
 
@@ -97,5 +101,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Disclaimer
 
-This extension is not affiliated with, endorsed by, or in any way officially connected with UC Davis. All product and university names are the registered trademarks of their original owners.
+This extension is not affiliated with, endorsed by, or in any way officially connected with UC Davis or RateMyProfessors. All product and university names are the registered trademarks of their original owners.
 ```
