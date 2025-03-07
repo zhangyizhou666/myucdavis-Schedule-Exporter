@@ -1,0 +1,80 @@
+/* Schedule Mate Styles */
+.schedule-mate-blue {
+    background-color: rgb(207, 228, 255) !important;
+  }
+  
+  .schedule-mate-red {
+    background-color: rgb(255, 220, 220) !important;
+  }
+  
+  .schedule-mate-yellow {
+    background-color: rgb(255, 244, 112) !important;
+  }
+  
+  .schedule-mate-green {
+    background-color: rgb(206, 255, 206) !important;
+  }
+  
+  .schedule-mate-conflict-tooltip {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .schedule-mate-conflict-tooltip:hover .schedule-mate-tooltip-text {
+    visibility: visible;
+    opacity: 1;
+  }
+  
+  .schedule-mate-tooltip-text {
+    visibility: hidden;
+    width: 200px;
+    background-color: #002855;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1000;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -100px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  
+  .schedule-mate-tooltip-text::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #002855 transparent transparent transparent;
+  }
+  
+  .schedule-mate-early-morning {
+    position: relative;
+  }
+  
+  .schedule-mate-early-morning::before {
+    content: "⏰";
+    position: absolute;
+    left: -20px;
+    font-size: 16px;
+  }
+  
+  .schedule-mate-rating {
+    display: inline-block;
+    margin-left: 10px;
+    font-weight: bold;
+  }
+  
+  .schedule-mate-rating-quality {
+    color: #002855;
+  }
+  
+  .schedule-mate-rating-difficulty {
+    color: #777;
+    margin-left: 5px;
+  }

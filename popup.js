@@ -1,66 +1,127 @@
 // popup.js
 document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('extractEvents').addEventListener('click', async () => {
-    try {
-      const statusElement = document.getElementById('status');
-      statusElement.textContent = 'Extracting schedule...';
-      statusElement.className = '';
-      
-      // Get the toggle value for registered only
-      const registeredOnly = document.getElementById('registeredOnly').checked;
-      
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      const response = await chrome.tabs.sendMessage(tab.id, { 
-        action: 'extractEvents',
-        debug: true,
-        registeredOnly: registeredOnly
-      });
-      
-      if (response.error) {
-        statusElement.textContent = `Error: ${response.error}`;
-        statusElement.className = 'status-error';
-        return;
-      }
-
-      if (!response.events || response.events.length === 0) {
-        statusElement.textContent = 'No events found';
-        statusElement.className = 'status-error';
-        return;
-      }
-
-      statusElement.textContent = `Found ${response.events.length} events! Generating ICS file...`;
-      
-      const icsContent = generateICS(response.events);
-      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      
-      chrome.downloads.download({
-        url: url,
-        filename: 'ucdavis-schedule.ics',
-        saveAs: true
-      }, (downloadId) => {
-        if (chrome.runtime.lastError) {
-          statusElement.textContent = `Error: ${chrome.runtime.lastError.message}`;
-          statusElement.className = 'status-error';
-        } else {
-          statusElement.textContent = 'Schedule exported successfully!';
-          statusElement.className = 'status-success';
-        }
-      });
-
-    } catch (error) {
-      console.error('Error in popup script:', error);
-      document.getElementById('status').textContent = `Error: ${error.message}`;
-      document.getElementById('status').className = 'status-error';
-    }
+  // Load user preferences
+  chrome.storage.sync.get({
+    conflictDetection: true,
+    colorCoding: true,
+    rmpIntegration: true,
+    earlyMorningWarning: true,
+    registeredOnly: true
+  }, function(items) {
+    document.getElementById('conflictDetection').checked = items.conflictDetection;
+    document.getElementById('colorCoding').checked = items.colorCoding;
+    document.getElementById('rmpIntegration').checked = items.rmpIntegration;
+    document.getElementById('earlyMorningWarning').checked = items.earlyMorningWarning;
+    document.getElementById('registeredOnly').checked = items.registeredOnly;
   });
+
+  // Save preferences when toggles change
+  document.getElementById('conflictDetection').addEventListener('change', saveOptions);
+  document.getElementById('colorCoding').addEventListener('change', saveOptions);
+  document.getElementById('rmpIntegration').addEventListener('change', saveOptions);
+  document.getElementById('earlyMorningWarning').addEventListener('change', saveOptions);
+  document.getElementById('registeredOnly').addEventListener('change', saveOptions);
+
+  // Apply preferences immediately when changed
+  document.getElementById('conflictDetection').addEventListener('change', applyPreferences);
+  document.getElementById('colorCoding').addEventListener('change', applyPreferences);
+  document.getElementById('rmpIntegration').addEventListener('change', applyPreferences);
+  document.getElementById('earlyMorningWarning').addEventListener('change', applyPreferences);
+
+  // Extract events button
+  document.getElementById('extractEvents').addEventListener('click', extractEvents);
+
+  // Initial application of preferences
+  applyPreferences();
 });
+
+function saveOptions() {
+  chrome.storage.sync.set({
+    conflictDetection: document.getElementById('conflictDetection').checked,
+    colorCoding: document.getElementById('colorCoding').checked,
+    rmpIntegration: document.getElementById('rmpIntegration').checked,
+    earlyMorningWarning: document.getElementById('earlyMorningWarning').checked,
+    registeredOnly: document.getElementById('registeredOnly').checked
+  });
+}
+
+function applyPreferences() {
+  const preferences = {
+    conflictDetection: document.getElementById('conflictDetection').checked,
+    colorCoding: document.getElementById('colorCoding').checked,
+    rmpIntegration: document.getElementById('rmpIntegration').checked,
+    earlyMorningWarning: document.getElementById('earlyMorningWarning').checked
+  };
+
+  // Send message to content script to apply preferences
+  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+    chrome.tabs.sendMessage(tabs[0].id, {
+      action: 'applyPreferences',
+      preferences: preferences
+    });
+  });
+}
+
+async function extractEvents() {
+  try {
+    const statusElement = document.getElementById('status');
+    statusElement.textContent = 'Extracting schedule...';
+    statusElement.className = '';
+    
+    // Get the toggle value for registered only
+    const registeredOnly = document.getElementById('registeredOnly').checked;
+    
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const response = await chrome.tabs.sendMessage(tab.id, { 
+      action: 'extractEvents',
+      debug: true,
+      registeredOnly: registeredOnly
+    });
+    
+    if (response.error) {
+      statusElement.textContent = `Error: ${response.error}`;
+      statusElement.className = 'status-error';
+      return;
+    }
+
+    if (!response.events || response.events.length === 0) {
+      statusElement.textContent = 'No events found';
+      statusElement.className = 'status-error';
+      return;
+    }
+
+    statusElement.textContent = `Found ${response.events.length} events! Generating ICS file...`;
+    
+    const icsContent = generateICS(response.events);
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    
+    chrome.downloads.download({
+      url: url,
+      filename: 'ucdavis-schedule.ics',
+      saveAs: true
+    }, (downloadId) => {
+      if (chrome.runtime.lastError) {
+        statusElement.textContent = `Error: ${chrome.runtime.lastError.message}`;
+        statusElement.className = 'status-error';
+      } else {
+        statusElement.textContent = 'Schedule exported successfully!';
+        statusElement.className = 'status-success';
+      }
+    });
+
+  } catch (error) {
+    console.error('Error in popup script:', error);
+    document.getElementById('status').textContent = `Error: ${error.message}`;
+    document.getElementById('status').className = 'status-error';
+  }
+}
 
 function generateICS(events) {
   let icsContent = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//UC Davis Schedule//EN',
+    'PRODID:-//Schedule Mate//UC Davis Schedule//EN',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH'
   ];

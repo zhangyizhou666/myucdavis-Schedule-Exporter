@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>UC Davis Schedule Exporter</title>
+  <title>Schedule Mate</title>
   <style>
     :root {
       --ucd-blue: #002855;
@@ -28,7 +28,7 @@
       background-color: var(--ucd-blue);
       color: white;
       padding: 15px 20px;
-      border-radius: 0; /* Changed from 8px 8px 0 0 to remove rounded corners */
+      border-radius: 0;
       margin-bottom: 20px;
       box-shadow: var(--shadow);
     }
@@ -168,25 +168,83 @@
     .toggle-label {
       font-size: 14px;
     }
+
+    .divider {
+      height: 1px;
+      background-color: #ddd;
+      margin: 15px 0;
+    }
+
+    .feature-section {
+      margin-bottom: 15px;
+    }
+
+    .section-title {
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--ucd-blue);
+    }
   </style>
 </head>
 <body>
   <div class="header">
-    <h2><img src="icons/icon48.png" alt="UC Davis" class="logo">UC Davis Schedule Exporter</h2>
-    <div class="subtitle">Export your schedule to your favorite calendar</div>
+    <h2><img src="icons/icon48.png" alt="UC Davis" class="logo">Schedule Mate</h2>
+    <div class="subtitle">Export and manage your UC Davis schedule</div>
   </div>
   
   <div class="container">
-    <div class="toggle-container">
-      <label class="toggle-switch">
-        <input type="checkbox" id="registeredOnly" checked>
-        <span class="slider"></span>
-      </label>
-      <span class="toggle-label">Export registered courses only</span>
+    <div class="feature-section">
+      <div class="section-title">Schedule Features</div>
+      
+      <div class="toggle-container">
+        <label class="toggle-switch">
+          <input type="checkbox" id="conflictDetection" checked>
+          <span class="slider"></span>
+        </label>
+        <span class="toggle-label">Conflict Detection</span>
+      </div>
+
+      <div class="toggle-container">
+        <label class="toggle-switch">
+          <input type="checkbox" id="colorCoding" checked>
+          <span class="slider"></span>
+        </label>
+        <span class="toggle-label">Color Coding</span>
+      </div>
+      
+      <div class="toggle-container">
+        <label class="toggle-switch">
+          <input type="checkbox" id="rmpIntegration" checked>
+          <span class="slider"></span>
+        </label>
+        <span class="toggle-label">RateMyProfessor Integration</span>
+      </div>
+
+      <div class="toggle-container">
+        <label class="toggle-switch">
+          <input type="checkbox" id="earlyMorningWarning" checked>
+          <span class="slider"></span>
+        </label>
+        <span class="toggle-label">Early Morning Class Warnings</span>
+      </div>
     </div>
-    
-    <button id="extractEvents" class="btn-accent">Export to Calendar</button>
-    <div id="status">Ready to export your schedule</div>
+
+    <div class="divider"></div>
+
+    <div class="feature-section">
+      <div class="section-title">Calendar Export</div>
+      <div class="toggle-container">
+        <label class="toggle-switch">
+          <input type="checkbox" id="registeredOnly" checked>
+          <span class="slider"></span>
+        </label>
+        <span class="toggle-label">Export registered courses only</span>
+      </div>
+      
+      <button id="extractEvents" class="btn-accent">Export to Calendar</button>
+    </div>
+
+    <div id="status">Ready to enhance your schedule</div>
     
     <div class="footer">
       This extension is not affiliated with UC Davis
