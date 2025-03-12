@@ -96,13 +96,13 @@ function initializeScheduleMate() {
   addScheduleMateStyles();
   
   try {
-    // Load saved preferences
-    chrome.storage.sync.get({
-      conflictDetection: true,
-      colorCoding: true,
-      rmpIntegration: true,
-      earlyMorningWarning: true
-    }, function(items) {
+  // Load saved preferences
+  chrome.storage.sync.get({
+    conflictDetection: true,
+    colorCoding: true,
+    rmpIntegration: true,
+    earlyMorningWarning: true
+  }, function(items) {
       if (chrome.runtime.lastError) {
         console.error('ScheduleMate: Error loading preferences', chrome.runtime.lastError);
         // Use default preferences instead
@@ -110,7 +110,7 @@ function initializeScheduleMate() {
         return;
       }
       
-      scheduleMatePreferences = items;
+    scheduleMatePreferences = items;
       console.log('ScheduleMate: Loaded preferences', scheduleMatePreferences);
       
       // Complete initialization
@@ -139,17 +139,17 @@ function useDefaultPreferences() {
 
 // Complete the initialization process
 function completeInitialization() {
-  // Load RateMyProfessor data if integration is enabled
-  if (scheduleMatePreferences.rmpIntegration) {
-    loadRMPData();
+    // Load RateMyProfessor data if integration is enabled
+    if (scheduleMatePreferences.rmpIntegration) {
+      loadRMPData();
     // Note: RMP data display will be triggered by the loadRMPData function itself
-  }
-  
-  // Load current schedule for conflict detection
-  loadSchedule();
-  
-  // Apply color coding and other visual updates
-  updateUI();
+    }
+    
+    // Load current schedule for conflict detection
+    loadSchedule();
+    
+    // Apply color coding and other visual updates
+    updateUI();
   
   // Add the sort button
   addSortButton();
@@ -571,7 +571,7 @@ function loadRMPData() {
     // Try to load the data from data.js
     fetch(chrome.runtime.getURL('data.js'))
       .then(response => response.text())
-      .then(data => {
+    .then(data => {
         // Extract JSON data from the data.js file
         // Assuming data.js contains something like "var rmpDataSet = {...};"
         try {
@@ -613,8 +613,8 @@ function loadRMPData() {
         if (rmpData) {
           displayRMPData();
         }
-      })
-      .catch(error => {
+    })
+    .catch(error => {
         console.error('ScheduleMate: Error loading RateMyProfessor data:', error);
         useFallbackRMPData();
       });
@@ -744,18 +744,18 @@ function useFallbackRMPData() {
   console.log('ScheduleMate: Using fallback RMP data');
   try {
     // This is a simplified version with common professors
-    rmpData = {
-      "Simmons": {"G": {"url": "123456", "quality": "4.2", "diff": "3.1"}},
+        rmpData = {
+          "Simmons": {"G": {"url": "123456", "quality": "4.2", "diff": "3.1"}},
       "D'souza": {"R": {"url": "654321", "quality": "3.8", "diff": "2.9"}},
       "Stevens": {"K": {"url": "789012", "quality": "4.0", "diff": "3.0"}}
-      // We would add more professor data here in a real implementation
-    };
-    updateUI();
-  } catch (e) {
+          // We would add more professor data here in a real implementation
+        };
+        updateUI();
+      } catch (e) {
     console.error('ScheduleMate: Error with fallback RMP data:', e);
     // Disable RMP integration if fallback fails
     scheduleMatePreferences.rmpIntegration = false;
-  }
+      }
 }
 
 // Load current schedule for conflict detection
@@ -1575,11 +1575,65 @@ function addRMPReloadButton() {
     hideButton.dataset.hidden = isHidden ? 'false' : 'true';
     hideButton.textContent = isHidden ? 'Hide Early/Late Classes' : 'Show Early/Late Classes';
     
-    // Show notification
-    showNotification(isHidden ? 'Showing all classes' : 'Hiding early morning and late night classes', 3000);
+    // Check if classes are already fully loaded
+    const totalClassesOnPage = document.querySelectorAll('.course-container').length;
+    let allClassesLoaded = false;
     
-    // Toggle visibility of early/late classes
-    toggleEarlyLateClasses(!isHidden); // !isHidden because we're toggling to the new state
+    // If we have a significant number of classes already loaded, assume they're all loaded
+    // This threshold could be adjusted based on experience
+    if (totalClassesOnPage > 50) {
+      allClassesLoaded = true;
+      console.log(`ScheduleMate: Detected ${totalClassesOnPage} classes already loaded, skipping loading step`);
+    }
+    
+    if (allClassesLoaded) {
+      // Skip loading and directly toggle visibility
+      console.log('ScheduleMate: Classes already loaded, proceeding with toggle');
+      showNotification(isHidden ? 'Showing all classes...' : 'Hiding early/late classes...', 3000);
+      toggleEarlyLateClasses(!isHidden);
+      
+      // Scroll back to the top of the page
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    } else {
+      // Show loading notification
+      showNotification(isHidden ? 'Loading all classes and showing them...' : 'Loading all classes and hiding early/late ones...', 3000);
+      
+      // Load all classes, then toggle visibility
+      forceLoadAllCourses()
+        .then(() => {
+          console.log('ScheduleMate: All classes loaded, now toggling early/late classes');
+          // Toggle visibility of early/late classes
+          toggleEarlyLateClasses(!isHidden); // !isHidden because we're toggling to the new state
+          
+          // Scroll back to the top of the page
+          window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+          });
+          
+          // Show confirmation notification
+          showNotification(isHidden ? 'Showing all classes' : 'Hiding early morning and late night classes', 3000);
+        })
+        .catch(error => {
+          console.error('ScheduleMate: Error loading all classes:', error);
+          // Try to toggle with what we have available
+          toggleEarlyLateClasses(!isHidden);
+          
+          // Scroll back to the top of the page
+          window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+          });
+          
+          // Show notification
+          showNotification(isHidden ? 
+            'Showing all currently loaded classes' : 
+            'Hiding early/late classes that are currently loaded', 3000);
+        });
+    }
   });
   
   document.body.appendChild(hideButton);
@@ -1597,56 +1651,110 @@ function toggleEarlyLateClasses(hide) {
   
   // Function to toggle a course container
   const toggleCourse = (indicator, hide) => {
-    // Find the parent course container
-    const courseContainer = indicator.closest('.course-container');
+    // Try multiple approaches to find the course container
     
+    // Approach 1: Using closest
+    let courseContainer = indicator.closest('.course-container');
+    
+    // Approach 2: If closest fails, try walking up the DOM tree
+    if (!courseContainer) {
+      let parent = indicator.parentElement;
+      const maxDepth = 10; // Prevent infinite loops
+      let depth = 0;
+      
+      while (parent && depth < maxDepth) {
+        // Check if this element or any of its children has the course-container class
+        if (parent.classList && parent.classList.contains('course-container')) {
+          courseContainer = parent;
+          break;
+        }
+        
+        // Also check for common course container identifiers
+        if (parent.querySelector && (
+            parent.querySelector('.results-title') || 
+            parent.querySelector('.meeting-item') ||
+            parent.querySelector('.results-seats'))) {
+          courseContainer = parent;
+          break;
+        }
+        
+        parent = parent.parentElement;
+        depth++;
+      }
+    }
+    
+    // If we found a container, toggle its visibility
     if (courseContainer) {
       if (hide) {
-        courseContainer.style.display = 'none';
-        // Also add a data attribute so we can track which courses are hidden
-        courseContainer.dataset.scheduleMateSuppressed = 'true';
+        // Ensure we're hiding the topmost container that represents a course
+        // Sometimes the course container might be nested in another element
+        let topContainer = courseContainer;
+        let parent = courseContainer.parentElement;
+        
+        // Try to find if the course is part of a larger container
+        while (parent && parent !== document.body) {
+          // If parent contains multiple course containers, we don't want to hide the parent
+          if (parent.querySelectorAll('.course-container').length > 1) {
+            break;
+          }
+          
+          // If parent looks like a course item wrapper, use that instead
+          if (parent.classList && (
+              parent.classList.contains('course-item') ||
+              parent.classList.contains('results-item') ||
+              parent.classList.contains('search-result'))) {
+            topContainer = parent;
+          }
+          
+          parent = parent.parentElement;
+        }
+        
+        // Apply hiding to the topmost appropriate container
+        topContainer.style.display = 'none';
+        topContainer.dataset.scheduleMateSuppressed = 'true';
       } else {
+        // When showing, find all suppressed elements
+        const suppressedElements = document.querySelectorAll('[data-schedule-mate-suppressed="true"]');
+        suppressedElements.forEach(element => {
+          element.style.display = '';
+          delete element.dataset.scheduleMateSuppressed;
+        });
+        
+        // Also ensure this specific container is shown
         courseContainer.style.display = '';
-        // Remove the data attribute when showing
         delete courseContainer.dataset.scheduleMateSuppressed;
       }
-      return true; // Container was found and toggled
-    } else {
-      console.warn('ScheduleMate: Could not find course container for indicator', indicator);
-      // As a fallback, try to find the parent with the most generic approach
-      let parent = indicator.parentElement;
-      while (parent && !parent.classList.contains('course-container') && parent !== document.body) {
-        parent = parent.parentElement;
-      }
-      
-      if (parent && parent !== document.body) {
-        console.log('ScheduleMate: Found alternative container', parent);
-        if (hide) {
-          parent.style.display = 'none';
-          parent.dataset.scheduleMateSuppressed = 'true';
-        } else {
-          parent.style.display = '';
-          delete parent.dataset.scheduleMateSuppressed;
-        }
-        return true; // Container was found and toggled with fallback
-      }
+      return true; // Successfully toggled
     }
-    return false; // Container not found
+    
+    return false; // Failed to find container
   };
   
-  // Toggle early morning classes
-  earlyIndicators.forEach(indicator => {
-    if (toggleCourse(indicator, hide)) {
-      earlyCount++;
-    }
-  });
-  
-  // Toggle late night classes
-  lateIndicators.forEach(indicator => {
-    if (toggleCourse(indicator, hide)) {
-      lateCount++;
-    }
-  });
+  if (!hide) {
+    // When showing, it's more efficient to just show all suppressed elements at once
+    const suppressedElements = document.querySelectorAll('[data-schedule-mate-suppressed="true"]');
+    suppressedElements.forEach(element => {
+      element.style.display = '';
+      delete element.dataset.scheduleMateSuppressed;
+    });
+    
+    earlyCount = earlyIndicators.length;
+    lateCount = lateIndicators.length;
+  } else {
+    // Toggle early morning classes
+    earlyIndicators.forEach(indicator => {
+      if (toggleCourse(indicator, hide)) {
+        earlyCount++;
+      }
+    });
+    
+    // Toggle late night classes
+    lateIndicators.forEach(indicator => {
+      if (toggleCourse(indicator, hide)) {
+        lateCount++;
+      }
+    });
+  }
   
   console.log(`ScheduleMate: ${hide ? 'Hid' : 'Showed'} ${earlyCount} early and ${lateCount} late classes`);
 }
@@ -1663,20 +1771,38 @@ function clearRMPDisplays() {
 function sortCoursesByColor() {
   console.log('ScheduleMate: Sorting courses by color...');
   
-  // Show loading notification
-  showNotification('Loading all courses...', 60000); // Long timeout in case loading takes time
+  // Check if classes are already fully loaded
+  const totalClassesOnPage = document.querySelectorAll('.course-container').length;
+  let allClassesLoaded = false;
   
-  // First, try to force load all content by scrolling to the bottom
-  forceLoadAllCourses()
-    .then(() => {
-      // Then process and sort all courses
-      processSortCourses();
-    })
-    .catch(error => {
-      console.error('ScheduleMate: Error loading all courses', error);
-      // Try to sort anyway with what we have
-      processSortCourses();
-    });
+  // If we have a significant number of classes already loaded, assume they're all loaded
+  // This threshold could be adjusted based on experience
+  if (totalClassesOnPage > 50) {
+    allClassesLoaded = true;
+    console.log(`ScheduleMate: Detected ${totalClassesOnPage} classes already loaded, skipping loading step`);
+  }
+  
+  if (allClassesLoaded) {
+    // Skip loading and directly process and sort courses
+    console.log('ScheduleMate: Classes already loaded, proceeding with sorting');
+    showNotification('Sorting classes by color...', 3000);
+    processSortCourses();
+  } else {
+    // Show loading notification
+    showNotification('Loading all courses...', 60000); // Long timeout in case loading takes time
+    
+    // First, try to force load all content by scrolling to the bottom
+    forceLoadAllCourses()
+      .then(() => {
+        // Then process and sort all courses
+        processSortCourses();
+      })
+      .catch(error => {
+        console.error('ScheduleMate: Error loading all courses', error);
+        // Try to sort anyway with what we have
+        processSortCourses();
+      });
+  }
 }
 
 // Function to process and sort courses
@@ -1924,26 +2050,33 @@ function showNotification(message, duration) {
   const notification = document.createElement('div');
   notification.id = 'schedule-mate-notification';
   notification.style.cssText = `
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #002855;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 5px;
-    font-weight: bold;
-    z-index: 1001;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.3);
-    opacity: 0;
-    transition: opacity 0.3s ease;
+    position: fixed !important;
+    top: 20px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    background-color: #002855 !important;
+    color: white !important;
+    padding: 12px 24px !important;
+    border-radius: 8px !important;
+    font-weight: bold !important;
+    z-index: 100000 !important; /* Extremely high z-index to ensure it's on top */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
+    opacity: 0 !important;
+    transition: all 0.3s ease !important;
+    max-width: 80% !important;
+    text-align: center !important;
+    pointer-events: none !important; /* Allow clicks to pass through */
+    transform: translate(-50%, -10px) !important;
+    border-left: 4px solid #FFBF00 !important; /* Gold accent for visibility */
+    font-size: 16px !important;
   `;
   notification.textContent = message;
   document.body.appendChild(notification);
   
-  // Show the notification
+  // Show the notification with animation
   setTimeout(() => {
     notification.style.opacity = '1';
+    notification.style.transform = 'translate(-50%, 0)';
     
     // Auto-hide after duration if specified
     if (duration) {
@@ -1951,7 +2084,7 @@ function showNotification(message, duration) {
         hideNotification();
       }, duration);
     }
-  }, 100);
+  }, 50);
 }
 
 // Hide notification
@@ -1959,6 +2092,7 @@ function hideNotification() {
   const notification = document.getElementById('schedule-mate-notification');
   if (notification) {
     notification.style.opacity = '0';
+    notification.style.transform = 'translate(-50%, 10px)';
     setTimeout(() => {
       notification.remove();
     }, 500);
