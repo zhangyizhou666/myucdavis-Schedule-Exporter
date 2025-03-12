@@ -1,4 +1,4 @@
-# ScheduleMate: UC Davis Schedule Enhancement Tool
+# Aggie Schedule Mate: UC Davis Schedule Enhancement Tool
 
 A Chrome extension that enhances your UC Davis Schedule Builder experience with color coding, professor ratings, time management tools, and calendar export functionality.
 
