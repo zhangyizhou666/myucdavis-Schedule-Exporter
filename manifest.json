@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Aggie Schedule Mate",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "Export UC Davis schedule to calendar with conflict detection, color coding, and RateMyProfessor integration",
   "permissions": [
     "activeTab",
@@ -27,5 +27,9 @@
   }],
   "background": {
     "service_worker": "background.js"
-  }
+  },
+  "web_accessible_resources": [{
+    "resources": ["uc_davis_professors.json", "uc_davis_legacyIds.json"],
+    "matches": ["*://*.ucdavis.edu/*"]
+  }]
 }

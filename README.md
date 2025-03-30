@@ -22,7 +22,6 @@ A Chrome extension that enhances your UC Davis Schedule Builder experience with 
 ### Professor Ratings
 - **RateMyProfessor Integration**: View quality and difficulty ratings for professors
 - **Google Search Links**: Easy access to search for professors not in the database
-- **User-Added Ratings**: Add your own ratings for professors
 
 ### Time Management
 - **Early Morning Detection**: Highlights classes that start at or before 9:00 AM
@@ -81,7 +80,7 @@ ScheduleMate:
 ## Permissions
 
 - **activeTab**: To access the current Schedule Builder page
-- **storage**: To save your preferences and user-added professor ratings
+- **storage**: To save your preferences
 - **downloads**: To save the .ics file to your computer
 - **host permissions for ucdavis.edu**: To run on the Schedule Builder website
 

@@ -198,269 +198,103 @@ function addDynamicContentObserver() {
 
 // Add CSS styles for color coding
 function addScheduleMateStyles() {
+  // Remove any existing styles to prevent duplicates
+  const existingStyle = document.getElementById('schedule-mate-styles');
+  if (existingStyle) existingStyle.remove();
+  
+  // Add CSS styles
   const style = document.createElement('style');
+  style.id = 'schedule-mate-styles';
   style.textContent = `
-    /* Base Colors */
-    .schedule-mate-blue {
-      background-color: ${BLUE} !important;
-    }
-    .schedule-mate-conflict {
-      background-color: ${RED} !important;
-    }
-    .schedule-mate-full {
-      background-color: ${YELLOW} !important;
-    }
+    /* Course container colors */
     .schedule-mate-available {
-      background-color: ${GREEN} !important;
+      background-color: #dff0d8 !important;
+      border-color: #d6e9c6 !important;
     }
     
-    /* Add more specificity to override any site styles */
-    div.course-container.schedule-mate-blue,
-    div.course-container.schedule-mate-conflict,
-    div.course-container.schedule-mate-full,
-    div.course-container.schedule-mate-available {
-      transition: background-color 0.3s ease;
-      position: relative !important;
+    .schedule-mate-full {
+      background-color: #fcf8e3 !important;
+      border-color: #faebcc !important;
     }
     
-    /* Especially important conflict indicators */
-    div.course-container.schedule-mate-conflict,
-    div.course-container.schedule-mate-conflict * {
-      background-color: ${RED} !important;
+    .schedule-mate-conflict {
+      background-color: #f2dede !important;
+      border-color: #ebccd1 !important;
     }
     
-    /* Add border to conflict courses for extra visibility */
-    div.course-container.schedule-mate-conflict {
-      border: 2px solid darkred !important;
+    .schedule-mate-blue {
+      background-color: #d9edf7 !important;
+      border-color: #bce8f1 !important;
     }
     
-    /* Early morning class indicator - new prominent style */
-    .schedule-mate-early-morning-indicator {
-      background-color: #FBE3A4 !important;
-      color: #B45F04 !important;
-      padding: 5px 8px !important;
-      margin: 5px 0 !important;
-      border-radius: 4px !important;
-      border-left: 4px solid #B45F04 !important;
-      font-weight: bold !important;
-      font-size: 14px !important;
-      display: flex !important;
-      align-items: center !important;
-      width: calc(100% - 20px) !important;
-      box-sizing: border-box !important;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.12) !important;
-      position: relative !important;
-      z-index: 10 !important;
-    }
-    
-    /* Late night class indicator */
-    .schedule-mate-late-night-indicator {
-      background-color: #E1D9F2 !important;
-      color: #4A235A !important;
-      padding: 5px 8px !important;
-      margin: 5px 0 !important;
-      border-radius: 4px !important;
-      border-left: 4px solid #4A235A !important;
-      font-weight: bold !important;
-      font-size: 14px !important;
-      display: flex !important;
-      align-items: center !important;
-      width: calc(100% - 20px) !important;
-      box-sizing: border-box !important;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.12) !important;
-      position: relative !important;
-      z-index: 10 !important;
-    }
-    
-    /* Status labels - positioned at the bottom left */
-    .schedule-mate-status-label {
-      position: absolute !important;
-      bottom: 5px !important;
-      left: 5px !important; /* Changed from right to left */
-      padding: 2px 6px !important;
-      border-radius: 3px !important;
-      font-size: 10px !important;
-      font-weight: bold !important;
-      text-transform: uppercase !important;
-      z-index: 5 !important;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.15) !important;
-      color: #000 !important;
-    }
-    
-    /* Specific styling for each status type */
-    .schedule-mate-status-schedule {
-      background-color: rgba(0, 40, 85, 0.9) !important;
-      color: white !important;
-    }
-    
-    .schedule-mate-status-conflict {
-      background-color: rgba(180, 0, 0, 0.9) !important;
-      color: #FFFFFF !important; /* Keep white color but make it bolder */
-      font-weight: 900 !important; /* Extra bold */
-      text-shadow: 0px 0px 2px #000000 !important; /* Add text shadow for contrast */
-      letter-spacing: 0.5px !important; /* Increase letter spacing for readability */
-    }
-    
-    .schedule-mate-status-full {
-      background-color: rgba(180, 140, 0, 0.9) !important;
-      color: white !important;
-    }
-    
-    .schedule-mate-status-available {
-      background-color: rgba(0, 140, 0, 0.9) !important;
-      color: white !important;
-    }
-    
-    /* RateMyProfessor rating styles */
+    /* RMP Rating styles */
     .schedule-mate-rating {
-      display: inline-block !important;
-      margin-left: 10px !important;
-      font-weight: bold !important;
-      padding: 2px 5px !important;
-      border-radius: 4px !important;
-      background-color: rgba(240, 240, 240, 0.8) !important;
+      margin-left: 8px !important;
       font-size: 12px !important;
-      vertical-align: middle !important;
+      border-radius: 4px !important;
+      padding: 2px 6px !important;
+      display: inline-block !important;
       white-space: nowrap !important;
     }
     
     .schedule-mate-rating-found {
-      border-left: 2px solid #4CAF50 !important;
+      background-color: #f8f9fa !important;
+      border: 1px solid #ddd !important;
     }
     
     .schedule-mate-rating-not-found {
-      border-left: 2px solid #FFA726 !important;
-      font-style: italic !important;
-    }
-    
-    .schedule-mate-rating-user-added {
-      border-left: 2px solid #2196F3 !important;
-      background-color: rgba(220, 237, 255, 0.8) !important;
+      background-color: #f8f9fa !important;
+      border: 1px solid #ddd !important;
+      opacity: 0.8 !important;
     }
     
     .schedule-mate-rating-quality {
-      color: #002855 !important;
-      position: relative !important;
-    }
-    
-    .schedule-mate-rating-quality::before {
-      content: "★ " !important;
-      color: #FFD700 !important;
+      color: #28a745 !important;
+      font-weight: bold !important;
     }
     
     .schedule-mate-rating-difficulty {
-      color: #555 !important;
-      position: relative !important;
+      color: #dc3545 !important;
+      font-weight: bold !important;
     }
     
-    .schedule-mate-rating-difficulty::before {
-      content: "⚖ " !important;
-      color: #777 !important;
+    .schedule-mate-take-again {
+      color: #007bff !important;
+      font-weight: bold !important;
     }
     
     .schedule-mate-rmp-link {
-      margin-left: 5px !important;
+      color: #6c757d !important;
       text-decoration: none !important;
-      font-size: 14px !important;
-      color: #1976D2 !important;
+      font-weight: bold !important;
+      transition: color 0.2s !important;
     }
     
     .schedule-mate-rmp-link:hover {
+      color: #0056b3 !important;
       text-decoration: underline !important;
     }
     
-    .schedule-mate-google-link {
+    /* Status indicators */
+    .schedule-mate-status {
+      display: inline-block !important;
       margin-left: 5px !important;
-      text-decoration: none !important;
-      font-size: 14px !important;
-      color: #DD4B39 !important;
-    }
-    
-    .schedule-mate-google-link:hover {
-      text-decoration: underline !important;
-    }
-    
-    /* Add rating button */
-    .schedule-mate-add-rating {
-      margin-left: 5px !important;
-      cursor: pointer !important;
-      color: #1976D2 !important;
       font-size: 12px !important;
-    }
-    
-    .schedule-mate-add-rating:hover {
-      text-decoration: underline !important;
-    }
-    
-    /* Rating modal */
-    .schedule-mate-modal {
-      display: none;
-      position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-      width: 100% !important;
-      height: 100% !important;
-      background-color: rgba(0, 0, 0, 0.6) !important;
-      z-index: 2000 !important;
-      align-items: center !important;
-      justify-content: center !important;
-    }
-    
-    .schedule-mate-modal-content {
-      background-color: white !important;
-      padding: 20px !important;
-      border-radius: 8px !important;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2) !important;
-      max-width: 400px !important;
-      width: 100% !important;
-    }
-    
-    .schedule-mate-modal-title {
-      font-size: 18px !important;
-      font-weight: bold !important;
-      margin-bottom: 15px !important;
-      color: #002855 !important;
-    }
-    
-    .schedule-mate-modal-field {
-      margin-bottom: 15px !important;
-    }
-    
-    .schedule-mate-modal-field label {
-      display: block !important;
-      margin-bottom: 5px !important;
-      font-weight: bold !important;
-    }
-    
-    .schedule-mate-modal-field input {
-      width: 100% !important;
-      padding: 8px !important;
-      border: 1px solid #ccc !important;
+      padding: 2px 6px !important;
       border-radius: 4px !important;
-    }
-    
-    .schedule-mate-modal-buttons {
-      display: flex !important;
-      justify-content: flex-end !important;
-      gap: 10px !important;
-    }
-    
-    .schedule-mate-modal-button {
-      padding: 8px 16px !important;
-      border: none !important;
-      border-radius: 4px !important;
-      cursor: pointer !important;
       font-weight: bold !important;
     }
     
-    .schedule-mate-modal-save {
-      background-color: #002855 !important;
-      color: white !important;
+    .schedule-mate-early-morning-indicator {
+      background-color: #e6f7ff !important;
+      border: 1px solid #91d5ff !important;
+      color: #0050b3 !important;
     }
     
-    .schedule-mate-modal-cancel {
-      background-color: #f0f0f0 !important;
-      color: #555 !important;
+    .schedule-mate-late-night-indicator {
+      background-color: #f9f0ff !important;
+      border: 1px solid #d3adf7 !important;
+      color: #531dab !important;
     }
     
     /* Sort button styling */
@@ -468,7 +302,7 @@ function addScheduleMateStyles() {
       position: fixed !important;
       bottom: 20px !important;
       right: 20px !important;
-      background-color: #002855 !important;
+      background-color: #28a745 !important;
       color: white !important;
       border: none !important;
       border-radius: 50px !important;
@@ -484,13 +318,45 @@ function addScheduleMateStyles() {
     }
     
     .schedule-mate-sort-button:hover {
-      background-color: #003977 !important;
+      background-color: #218838 !important;
       transform: translateY(-2px) !important;
       box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
     }
     
+    /* Sort by Rating button styling */
+    .schedule-mate-sort-rating-button {
+      position: fixed !important;
+      bottom: 20px !important;
+      right: 210px !important; /* Adjusted position to create even spacing */
+      background-color: #6c43c0 !important; /* Purple color to distinguish from other buttons */
+      color: white !important;
+      border: none !important;
+      border-radius: 50px !important;
+      padding: 12px 20px !important;
+      font-size: 14px !important;
+      font-weight: bold !important;
+      cursor: pointer !important;
+      z-index: 1000 !important;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.3) !important;
+      display: flex !important;
+      align-items: center !important;
+      transition: all 0.2s ease !important;
+    }
+    
+    .schedule-mate-sort-rating-button:hover {
+      background-color: #5537a3 !important;
+      transform: translateY(-2px) !important;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
+    }
+    
+    .schedule-mate-sort-rating-button::before {
+      content: "⭐" !important;
+      margin-right: 6px !important;
+      font-size: 16px !important;
+    }
+    
     .schedule-mate-sort-button::before {
-      content: "🔄" !important;
+      content: "🎨" !important;
       margin-right: 6px !important;
       font-size: 16px !important;
     }
@@ -499,8 +365,8 @@ function addScheduleMateStyles() {
     .schedule-mate-rmp-reload-button {
       position: fixed !important;
       bottom: 20px !important;
-      right: 180px !important; /* Position to the left of sort button */
-      background-color: #8E6F3E !important; /* Different color to distinguish from sort button */
+      right: 400px !important; /* Adjusted position to create even spacing */
+      background-color: #17a2b8 !important; /* Info color */
       color: white !important;
       border: none !important;
       border-radius: 50px !important;
@@ -516,45 +382,13 @@ function addScheduleMateStyles() {
     }
     
     .schedule-mate-rmp-reload-button:hover {
-      background-color: #B28F54 !important;
+      background-color: #138496 !important;
       transform: translateY(-2px) !important;
       box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
     }
     
     .schedule-mate-rmp-reload-button::before {
-      content: "📊" !important;
-      margin-right: 6px !important;
-      font-size: 16px !important;
-    }
-    
-    /* Browse all professors button styling */
-    .schedule-mate-browse-rmp-button {
-      position: fixed !important;
-      bottom: 20px !important;
-      right: 350px !important; /* Position to the left of reload button */
-      background-color: #4A235A !important; /* Purple color for distinction */
-      color: white !important;
-      border: none !important;
-      border-radius: 50px !important;
-      padding: 12px 20px !important;
-      font-size: 14px !important;
-      font-weight: bold !important;
-      cursor: pointer !important;
-      z-index: 1000 !important;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.3) !important;
-      display: flex !important;
-      align-items: center !important;
-      transition: all 0.2s ease !important;
-    }
-    
-    .schedule-mate-browse-rmp-button:hover {
-      background-color: #6C3483 !important;
-      transform: translateY(-2px) !important;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
-    }
-    
-    .schedule-mate-browse-rmp-button::before {
-      content: "👨‍🏫" !important;
+      content: "🌙" !important;
       margin-right: 6px !important;
       font-size: 16px !important;
     }
@@ -568,54 +402,94 @@ function loadRMPData() {
   try {
     console.log('ScheduleMate: Loading RateMyProfessor data...');
     
-    // Try to load the data from data.js
-    fetch(chrome.runtime.getURL('data.js'))
-      .then(response => response.text())
-    .then(data => {
-        // Extract JSON data from the data.js file
-        // Assuming data.js contains something like "var rmpDataSet = {...};"
-        try {
-          // Try to extract JSON between {} brackets assuming proper formatting
-          const jsonMatch = data.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            const jsonData = jsonMatch[0];
-            rmpData = JSON.parse(jsonData);
-            console.log('ScheduleMate: RMP data parsed successfully from data.js');
-          } else {
-            // Alternative approach: eval the script to get the data
-            // This is a fallback and generally not recommended, but may be necessary
-            // if the data.js file is not a simple JSON structure
-            const scriptTag = document.createElement('script');
-            scriptTag.textContent = data + '\nwindow.rmpDataFromDataJs = rmpDataSet;';
-            document.head.appendChild(scriptTag);
-            
-            // After script execution, get the data from the global variable
-            setTimeout(() => {
-              if (window.rmpDataFromDataJs) {
-                rmpData = window.rmpDataFromDataJs;
-                console.log('ScheduleMate: RMP data loaded via script tag execution');
-                // Clean up
-                document.head.removeChild(scriptTag);
-                delete window.rmpDataFromDataJs;
-                // Update UI after data is loaded
-                displayRMPData();
-              } else {
-                throw new Error('Could not extract RMP data from data.js');
-              }
-            }, 100);
-          }
-        } catch (parseError) {
-          console.error('ScheduleMate: Error parsing RMP data from data.js:', parseError);
-          useFallbackRMPData();
+    // Define promises to load both JSON files
+    const loadProfessorsPromise = fetch(chrome.runtime.getURL('uc_davis_professors.json'))
+    .then(response => response.json())
+      .catch(error => {
+        console.error('ScheduleMate: Error loading professor data:', error);
+        return null;
+      });
+      
+    const loadLegacyIdsPromise = fetch(chrome.runtime.getURL('uc_davis_legacyIds.json'))
+      .then(response => response.json())
+      .catch(error => {
+        console.error('ScheduleMate: Error loading legacy IDs:', error);
+        return null;
+      });
+    
+    // Load both files in parallel
+    Promise.all([loadProfessorsPromise, loadLegacyIdsPromise])
+      .then(([professorsArray, legacyIdsArray]) => {
+        if (!professorsArray && !legacyIdsArray) {
+          throw new Error('Failed to load professor data files');
         }
         
-        // Update UI after data is loaded (if JSON parsing worked)
-        if (rmpData) {
-          displayRMPData();
+        console.log(`ScheduleMate: Got professorsArray (${Array.isArray(professorsArray) ? professorsArray.length : 'not array'} items) and legacyIdsArray (${Array.isArray(legacyIdsArray) ? legacyIdsArray.length : 'not array'} items)`);
+        
+        // Convert the professors array to an object keyed by legacyId
+        let professorsObject = {};
+        if (Array.isArray(professorsArray)) {
+          console.log(`ScheduleMate: Converting professors array (${professorsArray.length} items) to object`);
+          professorsArray.forEach(professor => {
+            if (professor && professor.legacyId) {
+              professorsObject[professor.legacyId] = professor;
+            }
+          });
+        } else {
+          // If it's already an object, use it directly
+          professorsObject = professorsArray || {};
         }
+        
+        // Convert the legacy IDs array to an object for easier lookup
+        let legacyIdsObject = {};
+        if (Array.isArray(legacyIdsArray)) {
+          console.log(`ScheduleMate: Converting legacy IDs array (${legacyIdsArray.length} items) to object`);
+          legacyIdsArray.forEach(item => {
+            // Each item is an object with a single key-value pair
+            const entries = Object.entries(item);
+            if (entries.length > 0) {
+              const [name, id] = entries[0];
+              legacyIdsObject[name] = id;
+              
+              // Also add entries with just the email ID portion for matching professors by email
+              // Extract what looks like an email ID from the name if possible
+              const emailMatch = name.match(/^[a-zA-Z0-9._%+-]+(?=@|$)/);
+              if (emailMatch) {
+                const emailId = emailMatch[0].toLowerCase();
+                if (emailId.length > 0) {
+                  legacyIdsObject[emailId] = id;
+                }
+              }
+            }
+          });
+        } else {
+          // If it's already an object, use it directly
+          legacyIdsObject = legacyIdsArray || {};
+        }
+        
+        // Store the data for later use
+        rmpData = {
+          professors: professorsObject || {},
+          legacyIds: legacyIdsObject
+        };
+        
+        console.log(`ScheduleMate: RMP data loaded successfully. ${Object.keys(rmpData.professors).length} professors and ${Object.keys(rmpData.legacyIds).length} legacy IDs`);
+        
+        // Sample logging to verify data structure
+        const professorEntries = Object.entries(rmpData.professors);
+        if (professorEntries.length > 0) {
+          console.log('ScheduleMate: Sample professor entries:');
+          for (let i = 0; i < Math.min(3, professorEntries.length); i++) {
+            const [id, data] = professorEntries[i];
+            console.log(`  - ID "${id}": ${JSON.stringify(data)}`);
+          }
+        }
+        
+        // Display professor ratings on the page
+        displayRMPData();
     })
     .catch(error => {
-        console.error('ScheduleMate: Error loading RateMyProfessor data:', error);
+        console.error('ScheduleMate: Error processing RMP data:', error);
         useFallbackRMPData();
       });
   } catch (e) {
@@ -632,124 +506,417 @@ function displayRMPData() {
   }
   
   console.log('ScheduleMate: Displaying RMP data for professors');
+  console.log(`ScheduleMate: Loaded RMP data with ${Object.keys(rmpData.legacyIds).length} professors`);
   
-  // Load user-added ratings
-  loadUserRatings();
+  // Print a few example entries to verify data format
+  const legacyIdEntries = Object.entries(rmpData.legacyIds);
+  if (legacyIdEntries.length > 0) {
+    console.log('ScheduleMate: Sample legacyIds entries:');
+    for (let i = 0; i < Math.min(5, legacyIdEntries.length); i++) {
+      console.log(`  - "${legacyIdEntries[i][0]}": "${legacyIdEntries[i][1]}"`);
+    }
+  }
   
   // Find all professor links in the course containers
   const professorLinks = document.querySelectorAll('.results-instructor a[href^="mailto:"]');
+  console.log(`ScheduleMate: Found ${professorLinks.length} professor links to check for RMP data`);
   
   professorLinks.forEach(link => {
     // Get professor name from link text
     const fullName = link.textContent.trim();
-    // Try to extract last name (assuming format is "First Last" or "F. Last")
-    const lastName = fullName.split(' ').pop();
-    // Try to extract first initial
-    const firstInitial = fullName.charAt(0);
+    // Extract email from href to use as a unique identifier
+    const email = link.getAttribute('href').replace('mailto:', '').toLowerCase();
+    // Extract UCDavis email ID (part before @ucdavis.edu)
+    const emailId = email.split('@')[0].toLowerCase();
+    
+    console.log(`ScheduleMate: Processing professor ${fullName} (${emailId})`);
     
     // Check if this professor already has RMP data displayed
     if (link.nextElementSibling && link.nextElementSibling.classList.contains('schedule-mate-rating')) {
+      console.log(`ScheduleMate: Rating already exists for ${fullName}, skipping`);
       return; // Skip if already displayed
     }
     
-    // Check if we have user-added data for this professor
-    if (userRatings[fullName]) {
-      displayUserAddedRating(link, fullName, userRatings[fullName]);
-      return;
-    }
+    // First, check if we have the professor in the legacy IDs file
+    const professorLegacyId = findProfessorLegacyId(fullName, emailId);
     
-    // Create Google search URL for all professors
-    const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(fullName + " UC Davis ratemyprofessors")}`;
-    
-    // Check if we have data for this professor in RMP dataset
-    if (rmpData[lastName] && rmpData[lastName][firstInitial]) {
-      const profData = rmpData[lastName][firstInitial];
+    if (professorLegacyId) {
+      console.log(`ScheduleMate: Found legacy ID for ${fullName}: ${professorLegacyId}`);
+      // If we found a legacy ID, check if we have detailed info in the professors file
+      const professorInfo = findProfessorInfo(professorLegacyId);
       
-      // Create rating element
-      const ratingElement = document.createElement('span');
-      ratingElement.className = 'schedule-mate-rating schedule-mate-rating-found';
-      
-      // Add quality and difficulty ratings
-      const qualitySpan = document.createElement('span');
-      qualitySpan.className = 'schedule-mate-rating-quality';
-      qualitySpan.textContent = `${profData.quality}`;
-      qualitySpan.title = 'Professor Quality Rating';
-      
-      const difficultySpan = document.createElement('span');
-      difficultySpan.className = 'schedule-mate-rating-difficulty';
-      difficultySpan.textContent = `${profData.diff}`;
-      difficultySpan.title = 'Course Difficulty Rating';
-      
-      // Add Google search link
-      const googleLink = document.createElement('a');
-      googleLink.href = googleSearchUrl;
-      googleLink.target = '_blank';
-      googleLink.className = 'schedule-mate-google-link';
-      googleLink.textContent = 'Google';
-      googleLink.title = 'Search for this professor on Google';
-      
-      // Assemble rating element
-      ratingElement.appendChild(qualitySpan);
-      ratingElement.appendChild(document.createTextNode(' / '));
-      ratingElement.appendChild(difficultySpan);
-      ratingElement.appendChild(document.createTextNode(' | '));
-      ratingElement.appendChild(googleLink);
-      
-      // Insert after professor link
-      link.parentNode.insertBefore(ratingElement, link.nextSibling);
-      
-      console.log(`ScheduleMate: Added RMP data for ${fullName}`);
+      if (professorInfo) {
+        console.log(`ScheduleMate: Found detailed info for ${fullName}`);
+        displayProfessorInfo(link, professorInfo, professorLegacyId);
+      } else {
+        console.log(`ScheduleMate: No detailed info for ${fullName}, creating direct link with ID ${professorLegacyId}`);
+        // We have legacy ID but no detailed info, create link to RMP
+        displayRMPLink(link, fullName, professorLegacyId);
+      }
     } else {
-      // No data found for this professor, add Google search link only
-      const searchElement = document.createElement('span');
-      searchElement.className = 'schedule-mate-rating schedule-mate-rating-not-found';
-      
-      // Create Google search link
-      const googleLink = document.createElement('a');
-      googleLink.href = googleSearchUrl;
-      googleLink.target = '_blank';
-      googleLink.className = 'schedule-mate-google-link';
-      googleLink.textContent = 'Google';
-      googleLink.title = 'Search for this professor on Google';
-      
-      /* Temporarily disabled Add Rating feature
-      // Add button to add custom rating
-      const addRatingBtn = document.createElement('span');
-      addRatingBtn.className = 'schedule-mate-add-rating';
-      addRatingBtn.textContent = 'Add Rating';
-      addRatingBtn.title = 'Add your own rating for this professor';
-      addRatingBtn.addEventListener('click', () => {
-        showAddRatingModal(fullName);
-      });
-      */
-      
-      // Assemble search element
-      searchElement.appendChild(googleLink);
-      // Temporarily disabled Add Rating
-      // searchElement.appendChild(document.createTextNode(' | '));
-      // searchElement.appendChild(addRatingBtn);
-      
-      // Insert after professor link
-      link.parentNode.insertBefore(searchElement, link.nextSibling);
-      
-      console.log(`ScheduleMate: Added Google search link for ${fullName}`);
+      console.log(`ScheduleMate: No legacy ID found for ${fullName}, using search link`);
+      // No data found, provide direct search link
+      displaySearchLink(link, fullName);
     }
   });
   
   console.log('ScheduleMate: Finished displaying RMP data');
 }
 
+// Helper function to find professor legacy ID
+function findProfessorLegacyId(fullName, emailId) {
+  if (!rmpData || !rmpData.legacyIds) return null;
+  
+  console.log(`ScheduleMate: Finding legacy ID for ${fullName} (${emailId})`);
+  
+  // Try to find by email ID first (most reliable)
+  if (emailId && rmpData.legacyIds[emailId]) {
+    console.log(`ScheduleMate: Found legacy ID for ${fullName} by email: ${emailId}`);
+    return rmpData.legacyIds[emailId];
+  }
+  
+  // Parse the abbreviated name if it contains a period (like "S. Saltzen")
+  const nameParts = fullName.split(/\s+/);
+  const isAbbreviated = nameParts.length >= 2 && nameParts[0].endsWith('.');
+  
+  // Special case: check for exact match first
+  for (const [professorName, legacyId] of Object.entries(rmpData.legacyIds)) {
+    if (professorName.toLowerCase() === fullName.toLowerCase()) {
+      console.log(`ScheduleMate: Found exact match for ${fullName}`);
+      return legacyId;
+    }
+  }
+  
+  // If it's an abbreviated name, handle it specially
+  if (isAbbreviated) {
+    const firstInitial = nameParts[0].replace('.', '').toLowerCase();
+    
+    // For compound last names, we need to check multiple possibilities
+    // For example, "M. Sadoghi Hamedani" could be found with last name "Sadoghi" or "Hamedani"
+    // or a combination like "Sadoghi Hamedani"
+    
+    // Try all possible last name combinations for hyphenated or multi-part last names
+    // This starts from the second part as the potential last name, then tries combinations
+    for (let i = 1; i < nameParts.length; i++) {
+      // Try this part alone as the last name
+      const possibleLastName = nameParts[i].toLowerCase();
+      
+      // Skip if it's too short (likely a middle initial)
+      if (possibleLastName.length <= 2) continue;
+      
+      // Try with this single part as the last name
+      for (const [professorName, legacyId] of Object.entries(rmpData.legacyIds)) {
+        const profNameLower = professorName.toLowerCase();
+        const profNameParts = professorName.split(/\s+/);
+        
+        // Skip if there aren't enough parts or the first part doesn't match initial
+        if (profNameParts.length < 2) continue;
+        if (!profNameParts[0].toLowerCase().startsWith(firstInitial)) continue;
+        
+        // Check if any part of the professor name matches this potential last name
+        for (const part of profNameParts) {
+          if (part.toLowerCase() === possibleLastName || 
+              part.toLowerCase().includes(possibleLastName) ||
+              possibleLastName.includes(part.toLowerCase())) {
+            console.log(`ScheduleMate: Found match for ${fullName} with partial last name ${possibleLastName}`);
+            return legacyId;
+          }
+        }
+      }
+      
+      // Try with a compound last name starting from this position
+      for (let j = i + 1; j <= nameParts.length; j++) {
+        const compoundLastName = nameParts.slice(i, j).join(' ').toLowerCase();
+        
+        // Search for professors with matching compound last name
+        for (const [professorName, legacyId] of Object.entries(rmpData.legacyIds)) {
+          const profNameLower = professorName.toLowerCase();
+          const profNameParts = professorName.split(/\s+/);
+          
+          // Skip if there aren't enough parts or the first part doesn't match initial
+          if (profNameParts.length < 2) continue;
+          if (!profNameParts[0].toLowerCase().startsWith(firstInitial)) continue;
+          
+          // Check if the professor name contains this compound last name
+          if (profNameLower.includes(compoundLastName)) {
+            console.log(`ScheduleMate: Found match for ${fullName} with compound last name ${compoundLastName}`);
+            return legacyId;
+          }
+        }
+      }
+    }
+    
+    // Special case for Porquet-Lupine, Sadoghi Hamedani, and other known hyphenated names
+    // Check specific known naming patterns
+    if (fullName.includes('Porquet') || fullName.includes('Lupine')) {
+      for (const [professorName, legacyId] of Object.entries(rmpData.legacyIds)) {
+        if (professorName.toLowerCase().includes('porquet') ||
+            professorName.toLowerCase().includes('lupine')) {
+          console.log(`ScheduleMate: Found special case match for Porquet-Lupine: ${professorName}`);
+          return legacyId;
+        }
+      }
+    }
+    if (fullName.includes('Sadoghi') || fullName.includes('Hamedani')) {
+      for (const [professorName, legacyId] of Object.entries(rmpData.legacyIds)) {
+        if (professorName.toLowerCase().includes('sadoghi') ||
+            professorName.toLowerCase().includes('hamedani')) {
+          console.log(`ScheduleMate: Found special case match for Sadoghi Hamedani: ${professorName}`);
+          return legacyId;
+        }
+      }
+    }
+    
+    // Search for professors with matching first initial and any last name part
+    for (const [professorName, legacyId] of Object.entries(rmpData.legacyIds)) {
+      const profNameLower = professorName.toLowerCase();
+      const profNameParts = professorName.split(/\s+/);
+      
+      if (profNameParts.length >= 2) {
+        // Get first name from the database entry
+        const profFirstName = profNameParts[0].toLowerCase();
+        
+        // Check if first initial matches and if any part of the database name matches any part of our name
+        if (profFirstName.startsWith(firstInitial)) {
+          // Check each part of our name against each part of the database name
+          for (let i = 1; i < nameParts.length; i++) {
+            const ourPart = nameParts[i].toLowerCase();
+            if (ourPart.length <= 2) continue; // Skip short parts like middle initials
+            
+            for (let j = 1; j < profNameParts.length; j++) {
+              const profPart = profNameParts[j].toLowerCase();
+              if (profPart.includes(ourPart) || ourPart.includes(profPart)) {
+                console.log(`ScheduleMate: Found partial name match for ${fullName}: ${professorName}`);
+                return legacyId;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Normalize name for comparison
+  const normalizedName = fullName.toLowerCase()
+    .replace(/\./g, '') // Remove periods
+    .replace(/\s+/g, ''); // Remove spaces
+  
+  for (const [key, value] of Object.entries(rmpData.legacyIds)) {
+    const normalizedKey = key.toLowerCase()
+      .replace(/\./g, '')
+      .replace(/\s+/g, '');
+    
+    if (normalizedName === normalizedKey || 
+        normalizedName.includes(normalizedKey) || 
+        normalizedKey.includes(normalizedName)) {
+      console.log(`ScheduleMate: Found legacy ID for ${fullName} by name similarity: ${key}`);
+      return value;
+    }
+  }
+  
+  // If no match was found through the normal methods, try a fuzzy match
+  // This time, we'll check each part of the name against each part of each professor name
+  const namePieces = fullName.toLowerCase().split(/\s+/);
+  for (const [professorName, legacyId] of Object.entries(rmpData.legacyIds)) {
+    const profNamePieces = professorName.toLowerCase().split(/\s+/);
+    
+    // Check for any significant overlapping parts
+    let matchCount = 0;
+    for (const ourPiece of namePieces) {
+      if (ourPiece.length <= 2) continue; // Skip short pieces
+      
+      for (const profPiece of profNamePieces) {
+        if (profPiece.length <= 2) continue;
+        
+        // Check for similarity
+        if (profPiece.includes(ourPiece) || ourPiece.includes(profPiece)) {
+          matchCount++;
+          break; // Found a match for this piece
+        }
+      }
+    }
+    
+    // If we found at least one significant match and the first letters match
+    if (matchCount > 0 && 
+        namePieces[0].charAt(0).toLowerCase() === profNamePieces[0].charAt(0).toLowerCase()) {
+      console.log(`ScheduleMate: Found fuzzy match for ${fullName}: ${professorName} (${legacyId})`);
+      return legacyId;
+    }
+  }
+  
+  console.log(`ScheduleMate: No legacy ID found for ${fullName}`);
+  return null;
+}
+
+// Helper function to find professor detailed info
+function findProfessorInfo(legacyId) {
+  if (!rmpData || !rmpData.professors || !legacyId) return null;
+  
+  // Find professor info by legacy ID
+  return rmpData.professors[legacyId] || null;
+}
+
+// Display professor info when we have detailed data
+function displayProfessorInfo(link, professorInfo, legacyId) {
+  // Create rating element
+  const ratingElement = document.createElement('span');
+  ratingElement.className = 'schedule-mate-rating schedule-mate-rating-found';
+  
+  // Add quality rating
+  const qualitySpan = document.createElement('span');
+  qualitySpan.className = 'schedule-mate-rating-quality';
+  qualitySpan.textContent = professorInfo.avgRating || 'N/A';
+  qualitySpan.title = 'Professor Quality Rating';
+  
+  // Add difficulty rating
+  const difficultySpan = document.createElement('span');
+  difficultySpan.className = 'schedule-mate-rating-difficulty';
+  difficultySpan.textContent = professorInfo.avgDifficulty || 'N/A';
+  difficultySpan.title = 'Course Difficulty Rating';
+  
+  // Create RMP link
+  const rmpLink = document.createElement('a');
+  rmpLink.href = `https://www.ratemyprofessors.com/professor/${legacyId}`;
+  rmpLink.target = '_blank';
+  rmpLink.className = 'schedule-mate-rmp-link';
+  rmpLink.textContent = 'RMP';
+  rmpLink.title = 'View on RateMyProfessors.com';
+  
+  // Add would take again percentage if available
+  if (professorInfo.wouldTakeAgainPercent) {
+    const takeAgainPercent = parseFloat(professorInfo.wouldTakeAgainPercent);
+    if (!isNaN(takeAgainPercent)) {
+      const takeAgainSpan = document.createElement('span');
+      takeAgainSpan.className = 'schedule-mate-take-again';
+      takeAgainSpan.textContent = `${takeAgainPercent}%`;
+      takeAgainSpan.title = 'Would Take Again Percentage';
+      
+      // Add the take again percentage to the rating element
+      ratingElement.appendChild(qualitySpan);
+      ratingElement.appendChild(document.createTextNode(' / '));
+      ratingElement.appendChild(difficultySpan);
+      
+      if (takeAgainPercent > 0) {
+        ratingElement.appendChild(document.createTextNode(' | '));
+        ratingElement.appendChild(takeAgainSpan);
+      }
+    }
+  } else {
+    // Just add quality and difficulty
+    ratingElement.appendChild(qualitySpan);
+    ratingElement.appendChild(document.createTextNode(' / '));
+    ratingElement.appendChild(difficultySpan);
+  }
+  
+  // Add the RMP link
+  ratingElement.appendChild(document.createTextNode(' | '));
+  ratingElement.appendChild(rmpLink);
+  
+  // Insert after professor link
+  link.parentNode.insertBefore(ratingElement, link.nextSibling);
+  
+  console.log(`ScheduleMate: Added detailed RMP data for ${professorInfo.firstName} ${professorInfo.lastName}`);
+}
+
+// Display RMP link when we only have the legacy ID but no detailed info
+function displayRMPLink(link, fullName, legacyId) {
+  // Create element
+  const ratingElement = document.createElement('span');
+  ratingElement.className = 'schedule-mate-rating schedule-mate-rating-found';
+  
+  // Create RMP link
+  const rmpLink = document.createElement('a');
+  rmpLink.href = `https://www.ratemyprofessors.com/professor/${legacyId}`;
+  rmpLink.target = '_blank';
+  rmpLink.className = 'schedule-mate-rmp-link';
+  rmpLink.textContent = 'RMP';
+  rmpLink.title = 'View on RateMyProfessors.com';
+  
+  // Create text label
+  const rmpText = document.createElement('span');
+  rmpText.textContent = 'Ratings: ';
+  rmpText.className = 'schedule-mate-rmp-text';
+  
+  // Assemble element with better styling
+  ratingElement.appendChild(rmpText);
+  ratingElement.appendChild(rmpLink);
+  
+  // Insert after professor link
+  link.parentNode.insertBefore(ratingElement, link.nextSibling);
+  
+  console.log(`ScheduleMate: Added RMP link for ${fullName} with ID ${legacyId}`);
+}
+
+// Display search link when we have no data for this professor
+function displaySearchLink(link, fullName) {
+  // Create element for professors not found in our database
+  const searchElement = document.createElement('span');
+  searchElement.className = 'schedule-mate-rating schedule-mate-rating-not-found';
+  
+  // Check if we should try to extract last name for a better search
+  const nameParts = fullName.split(/\s+/);
+  let searchQuery;
+  
+  if (nameParts.length >= 2) {
+    // If it's an abbreviated name like "S. Saltzen"
+    if (nameParts[0].endsWith('.')) {
+      // For abbreviated names, try to create a better search query
+      // If we have multiple parts after the initial, include all of them as potential last name
+      if (nameParts.length > 2) {
+        // For compound last names like "M. Sadoghi Hamedani" or "J. Porquet-Lupine"
+        searchQuery = encodeURIComponent(`${nameParts.slice(1).join(' ')} UC Davis`);
+      } else {
+        // Just use last name for search to increase chances of finding the professor
+        searchQuery = encodeURIComponent(`${nameParts[nameParts.length - 1]} UC Davis`);
+      }
+    } else {
+      // Use full name
+      searchQuery = encodeURIComponent(`${fullName} UC Davis`);
+    }
+  } else {
+    // Fallback to whatever name we have
+    searchQuery = encodeURIComponent(`${fullName} UC Davis`);
+  }
+  
+  // Create direct RMP search link using the school ID for UC Davis
+  const rmpSearchLink = document.createElement('a');
+  // Use the proper search URL for RateMyProfessors
+  rmpSearchLink.href = `https://www.ratemyprofessors.com/search/teachers?query=${searchQuery}&sid=1073`;
+  rmpSearchLink.target = '_blank';
+  rmpSearchLink.className = 'schedule-mate-rmp-link';
+  rmpSearchLink.textContent = 'Search on RMP';
+  rmpSearchLink.title = 'Search for this professor on RateMyProfessors';
+  
+  // Assemble search element
+  searchElement.appendChild(rmpSearchLink);
+  
+  // Insert after professor link
+  link.parentNode.insertBefore(searchElement, link.nextSibling);
+  
+  console.log(`ScheduleMate: Added RMP search link for ${fullName} using query: ${searchQuery}`);
+}
+
 // Use fallback RMP data when fetch fails
 function useFallbackRMPData() {
   console.log('ScheduleMate: Using fallback RMP data');
   try {
-    // This is a simplified version with common professors
+    // Create a minimal fallback dataset with the new structure
         rmpData = {
-          "Simmons": {"G": {"url": "123456", "quality": "4.2", "diff": "3.1"}},
-      "D'souza": {"R": {"url": "654321", "quality": "3.8", "diff": "2.9"}},
-      "Stevens": {"K": {"url": "789012", "quality": "4.0", "diff": "3.0"}}
-          // We would add more professor data here in a real implementation
-        };
+      professors: {
+        "2021434": {
+          firstName: "Example",
+          lastName: "Professor",
+          avgRating: "4.2",
+          avgDifficulty: "3.1",
+          wouldTakeAgainPercent: "85"
+        }
+      },
+      legacyIds: {
+        "exampleprofessor": "2021434"
+      }
+    };
+    
+    // Try to update UI with fallback data
         updateUI();
       } catch (e) {
     console.error('ScheduleMate: Error with fallback RMP data:', e);
@@ -1535,13 +1702,28 @@ function addSortButton() {
   const existingButton = document.querySelector('.schedule-mate-sort-button');
   if (existingButton) existingButton.remove();
   
+  const existingRatingButton = document.querySelector('.schedule-mate-sort-rating-button');
+  if (existingRatingButton) existingRatingButton.remove();
+  
+  // Add color sorting button
   const sortButton = document.createElement('button');
   sortButton.className = 'schedule-mate-sort-button';
   sortButton.textContent = 'Sort by Color';
   sortButton.addEventListener('click', sortCoursesByColor);
   
   document.body.appendChild(sortButton);
-  console.log('ScheduleMate: Added sort button');
+  console.log('ScheduleMate: Added sort by color button');
+  
+  // Add rating sorting button if RMP integration is enabled
+  if (scheduleMatePreferences.rmpIntegration) {
+    const sortRatingButton = document.createElement('button');
+    sortRatingButton.className = 'schedule-mate-sort-rating-button';
+    sortRatingButton.textContent = 'Sort by Rating';
+    sortRatingButton.addEventListener('click', sortCoursesByRating);
+    
+    document.body.appendChild(sortRatingButton);
+    console.log('ScheduleMate: Added sort by rating button');
+  }
   
   // Add RMP reload button if RMP integration is enabled
   if (scheduleMatePreferences.rmpIntegration) {
@@ -2099,219 +2281,138 @@ function hideNotification() {
   }
 }
 
-// Global object to store user-added ratings
-let userRatings = {};
-
-// Load user ratings from storage
-function loadUserRatings() {
-  try {
-    chrome.storage.local.get('scheduleMateUserRatings', result => {
-      if (result.scheduleMateUserRatings) {
-        userRatings = result.scheduleMateUserRatings;
-        console.log(`ScheduleMate: Loaded ${Object.keys(userRatings).length} user-added ratings`);
-      } else {
-        userRatings = {};
-        console.log('ScheduleMate: No user-added ratings found');
-      }
-    });
-  } catch (e) {
-    console.error('ScheduleMate: Error loading user ratings', e);
-    userRatings = {};
+// Function to sort courses by professor ratings
+function sortCoursesByRating() {
+  console.log('ScheduleMate: Sorting courses by professor rating...');
+  
+  // Check if RMP data is loaded
+  if (!rmpData || !rmpData.professors) {
+    console.log('ScheduleMate: No RMP data available for sorting');
+    showNotification('Cannot sort by rating: No professor data available', 3000);
+    return;
+  }
+  
+  // Check if classes are already fully loaded
+  const totalClassesOnPage = document.querySelectorAll('.course-container').length;
+  let allClassesLoaded = false;
+  
+  // If we have a significant number of classes already loaded, assume they're all loaded
+  if (totalClassesOnPage > 50) {
+    allClassesLoaded = true;
+    console.log(`ScheduleMate: Detected ${totalClassesOnPage} classes already loaded, skipping loading step`);
+  }
+  
+  if (allClassesLoaded) {
+    // Skip loading and directly process and sort courses
+    console.log('ScheduleMate: Classes already loaded, proceeding with sorting by rating');
+    showNotification('Sorting classes by professor rating...', 3000);
+    processSortCoursesByRating();
+  } else {
+    // Show loading notification
+    showNotification('Loading all courses...', 60000); // Long timeout in case loading takes time
+    
+    // First, try to force load all content by scrolling to the bottom
+    forceLoadAllCourses()
+      .then(() => {
+        // Then process and sort all courses
+        processSortCoursesByRating();
+      })
+      .catch(error => {
+        console.error('ScheduleMate: Error loading all courses', error);
+        // Try to sort anyway with what we have
+        processSortCoursesByRating();
+      });
   }
 }
 
-// Save user ratings to storage
-function saveUserRatings() {
-  try {
-    chrome.storage.local.set({ 'scheduleMateUserRatings': userRatings }, () => {
-      console.log(`ScheduleMate: Saved ${Object.keys(userRatings).length} user-added ratings`);
-    });
-  } catch (e) {
-    console.error('ScheduleMate: Error saving user ratings', e);
-  }
-}
-
-// Display user-added rating
-function displayUserAddedRating(link, professorName, ratingData) {
-  // Create rating element
-  const ratingElement = document.createElement('span');
-  ratingElement.className = 'schedule-mate-rating schedule-mate-rating-user-added';
+// Function to process and sort courses by professor rating
+function processSortCoursesByRating() {
+  // Process all courses to ensure they have RMP data
+  const courseContainers = document.querySelectorAll('.course-container');
   
-  // Add quality and difficulty ratings
-  const qualitySpan = document.createElement('span');
-  qualitySpan.className = 'schedule-mate-rating-quality';
-  qualitySpan.textContent = `${ratingData.quality}`;
-  qualitySpan.title = 'Your Rating: Professor Quality';
-  
-  const difficultySpan = document.createElement('span');
-  difficultySpan.className = 'schedule-mate-rating-difficulty';
-  difficultySpan.textContent = `${ratingData.difficulty}`;
-  difficultySpan.title = 'Your Rating: Course Difficulty';
-  
-  // Add edit button
-  const editButton = document.createElement('span');
-  editButton.className = 'schedule-mate-add-rating';
-  editButton.textContent = 'Edit';
-  editButton.title = 'Edit your rating for this professor';
-  editButton.addEventListener('click', () => {
-    showAddRatingModal(professorName, ratingData);
-  });
-  
-  // Assemble rating element
-  ratingElement.appendChild(document.createTextNode('(Your Rating) '));
-  ratingElement.appendChild(qualitySpan);
-  ratingElement.appendChild(document.createTextNode(' / '));
-  ratingElement.appendChild(difficultySpan);
-  ratingElement.appendChild(document.createTextNode(' '));
-  ratingElement.appendChild(editButton);
-  
-  // Insert after professor link
-  link.parentNode.insertBefore(ratingElement, link.nextSibling);
-  
-  console.log(`ScheduleMate: Added user rating for ${professorName}`);
-}
-
-// Show modal to add/edit rating
-function showAddRatingModal(professorName, existingRating = null) {
-  // Create modal if it doesn't exist
-  let modal = document.getElementById('scheduleMateRatingModal');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'scheduleMateRatingModal';
-    modal.className = 'schedule-mate-modal';
-    
-    const modalContent = document.createElement('div');
-    modalContent.className = 'schedule-mate-modal-content';
-    
-    const title = document.createElement('div');
-    title.className = 'schedule-mate-modal-title';
-    title.id = 'scheduleMateModalTitle';
-    
-    const qualityField = document.createElement('div');
-    qualityField.className = 'schedule-mate-modal-field';
-    const qualityLabel = document.createElement('label');
-    qualityLabel.textContent = 'Quality Rating (0-5):';
-    qualityLabel.htmlFor = 'scheduleMateQualityInput';
-    const qualityInput = document.createElement('input');
-    qualityInput.type = 'number';
-    qualityInput.min = '0';
-    qualityInput.max = '5';
-    qualityInput.step = '0.1';
-    qualityInput.id = 'scheduleMateQualityInput';
-    qualityField.appendChild(qualityLabel);
-    qualityField.appendChild(qualityInput);
-    
-    const difficultyField = document.createElement('div');
-    difficultyField.className = 'schedule-mate-modal-field';
-    const difficultyLabel = document.createElement('label');
-    difficultyLabel.textContent = 'Difficulty Rating (0-5):';
-    difficultyLabel.htmlFor = 'scheduleMateDifficultyInput';
-    const difficultyInput = document.createElement('input');
-    difficultyInput.type = 'number';
-    difficultyInput.min = '0';
-    difficultyInput.max = '5';
-    difficultyInput.step = '0.1';
-    difficultyInput.id = 'scheduleMateDifficultyInput';
-    difficultyField.appendChild(difficultyLabel);
-    difficultyField.appendChild(difficultyInput);
-    
-    const noteField = document.createElement('div');
-    noteField.className = 'schedule-mate-modal-field';
-    noteField.innerHTML = '<em>Note: Ratings are saved locally in your browser and will persist between sessions.</em>';
-    
-    const buttons = document.createElement('div');
-    buttons.className = 'schedule-mate-modal-buttons';
-    
-    const saveButton = document.createElement('button');
-    saveButton.className = 'schedule-mate-modal-button schedule-mate-modal-save';
-    saveButton.textContent = 'Save';
-    saveButton.id = 'scheduleMateSaveRating';
-    
-    const cancelButton = document.createElement('button');
-    cancelButton.className = 'schedule-mate-modal-button schedule-mate-modal-cancel';
-    cancelButton.textContent = 'Cancel';
-    cancelButton.id = 'scheduleMateCancelRating';
-    
-    buttons.appendChild(cancelButton);
-    buttons.appendChild(saveButton);
-    
-    modalContent.appendChild(title);
-    modalContent.appendChild(qualityField);
-    modalContent.appendChild(difficultyField);
-    modalContent.appendChild(noteField);
-    modalContent.appendChild(buttons);
-    
-    modal.appendChild(modalContent);
-    document.body.appendChild(modal);
-    
-    // Setup event listeners
-    saveButton.addEventListener('click', saveRating);
-    cancelButton.addEventListener('click', hideModal);
-    
-    // Close when clicking outside
-    modal.addEventListener('click', e => {
-      if (e.target === modal) {
-        hideModal();
-      }
-    });
+  if (courseContainers.length === 0) {
+    console.log('ScheduleMate: No courses found to sort by rating');
+    hideNotification();
+    showNotification('No courses found to sort', 3000);
+    return;
   }
   
-  // Update modal content for current professor
-  document.getElementById('scheduleMateModalTitle').textContent = 
-    `${existingRating ? 'Edit' : 'Add'} Rating for ${professorName}`;
+  console.log(`ScheduleMate: Processing ${courseContainers.length} courses for sorting by rating`);
   
-  // Set values if editing
-  document.getElementById('scheduleMateQualityInput').value = 
-    existingRating ? existingRating.quality : '4.0';
-  document.getElementById('scheduleMateDifficultyInput').value = 
-    existingRating ? existingRating.difficulty : '3.0';
+  // Find the parent container 
+  const parentContainer = courseContainers[0].parentElement;
+  if (!parentContainer) {
+    console.log('ScheduleMate: Cannot find parent container');
+    hideNotification();
+    showNotification('Error: Cannot find course container', 3000);
+    return;
+  }
   
-  // Store current professor name in the modal
-  modal.dataset.professorName = professorName;
+  // Create an array of the course elements to sort
+  const coursesArray = Array.from(courseContainers);
   
-  // Show the modal
-  modal.style.display = 'flex';
-  
-  function saveRating() {
-    const quality = parseFloat(document.getElementById('scheduleMateQualityInput').value);
-    const difficulty = parseFloat(document.getElementById('scheduleMateDifficultyInput').value);
+  // Function to get professor rating from a course element
+  const getProfessorRating = (course) => {
+    // Find professor link in the course
+    const professorLink = course.querySelector('.results-instructor a[href^="mailto:"]');
+    if (!professorLink) return -1; // No professor link found
     
-    // Validate inputs
-    if (isNaN(quality) || quality < 0 || quality > 5 || 
-        isNaN(difficulty) || difficulty < 0 || difficulty > 5) {
-      alert('Please enter valid ratings between 0 and 5.');
-      return;
+    // Check if we already have rating displayed
+    const ratingElement = course.querySelector('.schedule-mate-rating-quality');
+    if (ratingElement) {
+      const rating = parseFloat(ratingElement.textContent);
+      return isNaN(rating) ? -1 : rating;
     }
     
-    // Format to 1 decimal place
-    const formattedQuality = quality.toFixed(1);
-    const formattedDifficulty = difficulty.toFixed(1);
+    // If no rating is displayed yet, try to find it
+    const fullName = professorLink.textContent.trim();
+    const email = professorLink.getAttribute('href').replace('mailto:', '').toLowerCase();
+    const emailId = email.split('@')[0].toLowerCase();
     
-    // Get professor name from modal
-    const professorName = modal.dataset.professorName;
+    // Try to find professor legacy ID
+    const legacyId = findProfessorLegacyId(fullName, emailId);
+    if (legacyId) {
+      // Try to find professor info
+      const professorInfo = findProfessorInfo(legacyId);
+      if (professorInfo && professorInfo.avgRating) {
+        return parseFloat(professorInfo.avgRating);
+      }
+    }
     
-    // Save rating
-    userRatings[professorName] = {
-      quality: formattedQuality,
-      difficulty: formattedDifficulty,
-      timestamp: Date.now()
-    };
-    
-    // Save to storage
-    saveUserRatings();
-    
-    // Update display
-    clearRMPDisplays();
-    displayRMPData();
-    
-    // Hide modal
-    hideModal();
-    
-    // Show confirmation
-    showNotification(`Rating saved for ${professorName}!`, 3000);
-  }
+    return -1; // No rating found
+  };
   
-  function hideModal() {
-    modal.style.display = 'none';
-  }
+  // Sort the courses by professor rating (highest first)
+  coursesArray.sort((a, b) => {
+    const ratingA = getProfessorRating(a);
+    const ratingB = getProfessorRating(b);
+    
+    // First sort by whether rating exists (courses with ratings come first)
+    if (ratingA >= 0 && ratingB < 0) return -1;
+    if (ratingA < 0 && ratingB >= 0) return 1;
+    
+    // Then sort by rating value (higher ratings first)
+    return ratingB - ratingA;
+  });
+  
+  // Clear the parent container and re-add courses in sorted order
+  parentContainer.innerHTML = '';
+  coursesArray.forEach(course => {
+    parentContainer.appendChild(course);
+  });
+  
+  // Collapse all course details to make the page more manageable
+  collapseAllCourseDetails();
+  
+  // Scroll back to the top of the page
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+  
+  console.log('ScheduleMate: Courses sorted by professor rating successfully');
+  
+  // Hide loading notification and show success
+  hideNotification();
+  showNotification('Courses sorted by professor rating (highest first)', 3000);
 }
