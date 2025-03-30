@@ -591,107 +591,150 @@ function findProfessorLegacyId(fullName, emailId) {
   if (isAbbreviated) {
     const firstInitial = nameParts[0].replace('.', '').toLowerCase();
     
-    // For compound last names, we need to check multiple possibilities
-    // For example, "M. Sadoghi Hamedani" could be found with last name "Sadoghi" or "Hamedani"
-    // or a combination like "Sadoghi Hamedani"
+    // The last part is usually the last name in abbreviated formats
+    // For cases like "J. ZHANG", the last name is "ZHANG"
+    const lastName = nameParts[nameParts.length - 1].toLowerCase();
     
-    // Try all possible last name combinations for hyphenated or multi-part last names
-    // This starts from the second part as the potential last name, then tries combinations
-    for (let i = 1; i < nameParts.length; i++) {
-      // Try this part alone as the last name
-      const possibleLastName = nameParts[i].toLowerCase();
-      
-      // Skip if it's too short (likely a middle initial)
-      if (possibleLastName.length <= 2) continue;
-      
-      // Try with this single part as the last name
-      for (const [professorName, legacyId] of Object.entries(rmpData.legacyIds)) {
-        const profNameLower = professorName.toLowerCase();
-        const profNameParts = professorName.split(/\s+/);
-        
-        // Skip if there aren't enough parts or the first part doesn't match initial
-        if (profNameParts.length < 2) continue;
-        if (!profNameParts[0].toLowerCase().startsWith(firstInitial)) continue;
-        
-        // Check if any part of the professor name matches this potential last name
-        for (const part of profNameParts) {
-          if (part.toLowerCase() === possibleLastName || 
-              part.toLowerCase().includes(possibleLastName) ||
-              possibleLastName.includes(part.toLowerCase())) {
-            console.log(`ScheduleMate: Found match for ${fullName} with partial last name ${possibleLastName}`);
-            return legacyId;
-          }
-        }
-      }
-      
-      // Try with a compound last name starting from this position
-      for (let j = i + 1; j <= nameParts.length; j++) {
-        const compoundLastName = nameParts.slice(i, j).join(' ').toLowerCase();
-        
-        // Search for professors with matching compound last name
-        for (const [professorName, legacyId] of Object.entries(rmpData.legacyIds)) {
-          const profNameLower = professorName.toLowerCase();
-          const profNameParts = professorName.split(/\s+/);
-          
-          // Skip if there aren't enough parts or the first part doesn't match initial
-          if (profNameParts.length < 2) continue;
-          if (!profNameParts[0].toLowerCase().startsWith(firstInitial)) continue;
-          
-          // Check if the professor name contains this compound last name
-          if (profNameLower.includes(compoundLastName)) {
-            console.log(`ScheduleMate: Found match for ${fullName} with compound last name ${compoundLastName}`);
-            return legacyId;
-          }
-        }
-      }
-    }
+    console.log(`ScheduleMate: Searching for professors with last name "${lastName}" and first initial "${firstInitial}"`);
     
-    // Special case for Porquet-Lupine, Sadoghi Hamedani, and other known hyphenated names
-    // Check specific known naming patterns
-    if (fullName.includes('Porquet') || fullName.includes('Lupine')) {
-      for (const [professorName, legacyId] of Object.entries(rmpData.legacyIds)) {
-        if (professorName.toLowerCase().includes('porquet') ||
-            professorName.toLowerCase().includes('lupine')) {
-          console.log(`ScheduleMate: Found special case match for Porquet-Lupine: ${professorName}`);
-          return legacyId;
-        }
-      }
-    }
-    if (fullName.includes('Sadoghi') || fullName.includes('Hamedani')) {
-      for (const [professorName, legacyId] of Object.entries(rmpData.legacyIds)) {
-        if (professorName.toLowerCase().includes('sadoghi') ||
-            professorName.toLowerCase().includes('hamedani')) {
-          console.log(`ScheduleMate: Found special case match for Sadoghi Hamedani: ${professorName}`);
-          return legacyId;
-        }
-      }
-    }
+    // Create a filtered list of candidates with matching last name
+    const lastNameCandidates = [];
     
-    // Search for professors with matching first initial and any last name part
+    // First, collect all professors with the same last name
     for (const [professorName, legacyId] of Object.entries(rmpData.legacyIds)) {
-      const profNameLower = professorName.toLowerCase();
-      const profNameParts = professorName.split(/\s+/);
+      const profNameParts = professorName.toLowerCase().split(/\s+/);
       
+      // Check if the last part matches our last name
       if (profNameParts.length >= 2) {
-        // Get first name from the database entry
-        const profFirstName = profNameParts[0].toLowerCase();
+        const profLastName = profNameParts[profNameParts.length - 1];
+        if (profLastName === lastName || 
+            profLastName.includes(lastName) || 
+            lastName.includes(profLastName)) {
+          lastNameCandidates.push({ name: professorName, id: legacyId, parts: profNameParts });
+        }
+      }
+    }
+    
+    console.log(`ScheduleMate: Found ${lastNameCandidates.length} candidates with last name matching "${lastName}"`);
+    
+    // If we have candidates matching last name
+    if (lastNameCandidates.length > 0) {
+      // If there's only one candidate with this last name, use it
+      if (lastNameCandidates.length === 1) {
+        console.log(`ScheduleMate: Found single last name match for ${fullName}: ${lastNameCandidates[0].name}`);
+        return lastNameCandidates[0].id;
+      }
+      
+      // If multiple candidates with the same last name, check first initial
+      for (const candidate of lastNameCandidates) {
+        const profFirstInitial = candidate.parts[0].charAt(0).toLowerCase();
+        if (profFirstInitial === firstInitial) {
+          console.log(`ScheduleMate: Found match by last name and first initial for ${fullName}: ${candidate.name}`);
+          return candidate.id;
+        }
+      }
+      
+      // If no exact first initial match, choose the first candidate as fallback
+      console.log(`ScheduleMate: No exact first initial match found, using first candidate with matching last name: ${lastNameCandidates[0].name}`);
+      return lastNameCandidates[0].id;
+    }
+    
+    // If we didn't find any exact last name match, try a more flexible approach for compound names
+    // For cases like "A. Raybuck" to avoid matching with "Arron Anderson"
+    
+    // Create a map of candidates grouped by last name
+    const candidatesByLastName = {};
+    
+    for (const [professorName, legacyId] of Object.entries(rmpData.legacyIds)) {
+      const profNameParts = professorName.toLowerCase().split(/\s+/);
+      if (profNameParts.length >= 2) {
+        const profLastName = profNameParts[profNameParts.length - 1];
+        if (!candidatesByLastName[profLastName]) {
+          candidatesByLastName[profLastName] = [];
+        }
+        candidatesByLastName[profLastName].push({ 
+          name: professorName, 
+          id: legacyId, 
+          firstName: profNameParts[0],
+          firstInitial: profNameParts[0].charAt(0).toLowerCase()
+        });
+      }
+    }
+    
+    // Find candidates where any part of our last name is contained in their last name
+    let bestCandidate = null;
+    let bestScore = 0;
+    
+    for (const [profLastName, candidates] of Object.entries(candidatesByLastName)) {
+      // Score based on string similarity between last names
+      let lastNameSimilarity = 0;
+      
+      // Check if our last name is contained in prof last name or vice versa
+      if (profLastName.includes(lastName) || lastName.includes(profLastName)) {
+        lastNameSimilarity = Math.min(lastName.length, profLastName.length) / 
+                            Math.max(lastName.length, profLastName.length);
         
-        // Check if first initial matches and if any part of the database name matches any part of our name
-        if (profFirstName.startsWith(firstInitial)) {
-          // Check each part of our name against each part of the database name
-          for (let i = 1; i < nameParts.length; i++) {
-            const ourPart = nameParts[i].toLowerCase();
-            if (ourPart.length <= 2) continue; // Skip short parts like middle initials
-            
-            for (let j = 1; j < profNameParts.length; j++) {
-              const profPart = profNameParts[j].toLowerCase();
-              if (profPart.includes(ourPart) || ourPart.includes(profPart)) {
-                console.log(`ScheduleMate: Found partial name match for ${fullName}: ${professorName}`);
-                return legacyId;
-              }
-            }
+        // Boost score if one is fully contained in the other
+        if (profLastName === lastName) lastNameSimilarity = 1;
+        else if (profLastName.includes(lastName) || lastName.includes(profLastName)) {
+          lastNameSimilarity *= 0.8;
+        }
+        
+        for (const candidate of candidates) {
+          let score = lastNameSimilarity;
+          
+          // Bonus if first initial matches
+          if (candidate.firstInitial === firstInitial) {
+            score += 0.5;
+          }
+          
+          if (score > bestScore) {
+            bestScore = score;
+            bestCandidate = candidate;
           }
         }
+      }
+    }
+    
+    if (bestCandidate && bestScore > 0.5) {
+      console.log(`ScheduleMate: Found best match for ${fullName}: ${bestCandidate.name} (score: ${bestScore})`);
+      return bestCandidate.id;
+    }
+    
+    // For special common cases like Zhang, Zhao, Li, Wang where many professors might share the same last name
+    // Create a special handling for these common names to ensure proper matching
+    if (['zhang', 'zhao', 'li', 'wang', 'chen', 'liu', 'wu', 'yang'].includes(lastName)) {
+      console.log(`ScheduleMate: Special handling for common last name: ${lastName}`);
+      
+      // Get all professors with this common last name
+      const profsByCommonName = [];
+      
+      for (const [professorName, legacyId] of Object.entries(rmpData.legacyIds)) {
+        const profNameParts = professorName.toLowerCase().split(/\s+/);
+        if (profNameParts.length >= 2) {
+          const profLastName = profNameParts[profNameParts.length - 1];
+          if (profLastName === lastName) {
+            profsByCommonName.push({
+              name: professorName,
+              id: legacyId,
+              firstName: profNameParts[0],
+              firstInitial: profNameParts[0].charAt(0).toLowerCase()
+            });
+          }
+        }
+      }
+      
+      // Sort by exact match on first initial
+      const sortedProfs = profsByCommonName.sort((a, b) => {
+        // If one matches the first initial exactly but the other doesn't, prioritize the match
+        if (a.firstInitial === firstInitial && b.firstInitial !== firstInitial) return -1;
+        if (a.firstInitial !== firstInitial && b.firstInitial === firstInitial) return 1;
+        return 0;
+      });
+      
+      if (sortedProfs.length > 0) {
+        console.log(`ScheduleMate: Found special match for common name ${lastName}: ${sortedProfs[0].name}`);
+        return sortedProfs[0].id;
       }
     }
   }
