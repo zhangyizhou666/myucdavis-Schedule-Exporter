@@ -184,19 +184,59 @@
       margin-bottom: 10px;
       color: var(--ucd-blue);
     }
+
+    .section-title-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .toggle-all {
+      margin-left: auto;
+    }
+    
+    .header-button {
+      width: auto;
+      padding: 8px 12px;
+      margin: 10px 0 0 0;
+      background-color: var(--ucd-gold);
+      color: var(--ucd-blue);
+      border: none;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow);
+    }
+    
+    .header-button:hover {
+      background-color: #FFD34D;
+      transform: translateY(-1px);
+    }
   </style>
 </head>
 <body>
   <div class="header">
     <h2><img src="icons/icon48.png" alt="UC Davis" class="logo">Aggie Schedule Mate</h2>
     <div class="subtitle">Export and manage your UC Davis schedule</div>
+    <button id="goToScheduleBuilder" class="header-button">Go to Schedule Builder</button>
   </div>
   
   <div class="container">
     <div class="feature-section">
-      <div class="section-title">Schedule Features</div>
+      <div class="section-title-container">
+        <div class="section-title">Schedule Features</div>
+        <div class="toggle-container toggle-all">
+          <label class="toggle-switch">
+            <input type="checkbox" id="allFeatures" checked>
+            <span class="slider"></span>
+          </label>
+          <span class="toggle-label">All Features</span>
+        </div>
+      </div>
       
-      <div class="toggle-container">
+      <div class="toggle-container" style="display: none;">
         <label class="toggle-switch">
           <input type="checkbox" id="conflictDetection" checked>
           <span class="slider"></span>

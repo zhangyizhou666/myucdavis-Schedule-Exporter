@@ -92,8 +92,18 @@ function formatCourseCode(courseCode) {
 function initializeScheduleMate() {
   console.log('ScheduleMate: Initializing...');
   
-  // Add CSS styles for color coding
+  // Check if we're on the UC Davis Schedule Builder page
+  const isScheduleBuilderPage = window.location.href.includes('my.ucdavis.edu/schedulebuilder');
+  console.log(`ScheduleMate: Current URL is ${window.location.href}, isScheduleBuilderPage: ${isScheduleBuilderPage}`);
+  
+  // Add CSS styles for color coding (this is needed on all pages)
   addScheduleMateStyles();
+  
+  // Only initialize the full functionality on the schedule builder page
+  if (!isScheduleBuilderPage) {
+    console.log('ScheduleMate: Not on Schedule Builder page, skipping full initialization');
+    return;
+  }
   
   try {
   // Load saved preferences
@@ -1646,6 +1656,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       console.error('Error during extraction:', error);
       sendResponse({ error: error.message });
     }
+  } else if (request.action === 'applyPreferences') {
+    // Update preferences
+    scheduleMatePreferences = request.preferences;
+    console.log('ScheduleMate: Preferences updated', scheduleMatePreferences);
+    
+    // Apply the new preferences
+    updateUI();
+    
+    // Refresh buttons based on new preferences
+    addSortButton();
+    
+    // Send success response
+    sendResponse({ success: true });
   }
   return true;
 });
@@ -1674,14 +1697,16 @@ function addSortButton() {
   const existingRatingButton = document.querySelector('.schedule-mate-sort-rating-button');
   if (existingRatingButton) existingRatingButton.remove();
   
-  // Add color sorting button
-  const sortButton = document.createElement('button');
-  sortButton.className = 'schedule-mate-sort-button';
-  sortButton.textContent = 'Sort by Color';
-  sortButton.addEventListener('click', sortCoursesByColor);
-  
-  document.body.appendChild(sortButton);
-  console.log('ScheduleMate: Added sort by color button');
+  // Add color sorting button if color coding is enabled
+  if (scheduleMatePreferences.colorCoding) {
+    const sortButton = document.createElement('button');
+    sortButton.className = 'schedule-mate-sort-button';
+    sortButton.textContent = 'Sort by Color';
+    sortButton.addEventListener('click', sortCoursesByColor);
+    
+    document.body.appendChild(sortButton);
+    console.log('ScheduleMate: Added sort by color button');
+  }
   
   // Add rating sorting button if RMP integration is enabled
   if (scheduleMatePreferences.rmpIntegration) {

@@ -13,6 +13,13 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('rmpIntegration').checked = items.rmpIntegration;
     document.getElementById('earlyMorningWarning').checked = items.earlyMorningWarning;
     document.getElementById('registeredOnly').checked = items.registeredOnly;
+    
+    // Set all features toggle based on all other toggles being checked
+    document.getElementById('allFeatures').checked = 
+      items.conflictDetection && 
+      items.colorCoding && 
+      items.rmpIntegration && 
+      items.earlyMorningWarning;
   });
 
   // Save preferences when toggles change
@@ -23,10 +30,46 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('registeredOnly').addEventListener('change', saveOptions);
 
   // Apply preferences immediately when changed
+  document.getElementById('conflictDetection').addEventListener('change', updateAllFeaturesToggle);
+  document.getElementById('colorCoding').addEventListener('change', updateAllFeaturesToggle);
+  document.getElementById('rmpIntegration').addEventListener('change', updateAllFeaturesToggle);
+  document.getElementById('earlyMorningWarning').addEventListener('change', updateAllFeaturesToggle);
+  
   document.getElementById('conflictDetection').addEventListener('change', applyPreferences);
   document.getElementById('colorCoding').addEventListener('change', applyPreferences);
   document.getElementById('rmpIntegration').addEventListener('change', applyPreferences);
   document.getElementById('earlyMorningWarning').addEventListener('change', applyPreferences);
+  
+  // All features toggle handling
+  document.getElementById('allFeatures').addEventListener('change', function(e) {
+    const isChecked = e.target.checked;
+    
+    // Update all feature toggles
+    document.getElementById('conflictDetection').checked = isChecked;
+    document.getElementById('colorCoding').checked = isChecked;
+    document.getElementById('rmpIntegration').checked = isChecked;
+    document.getElementById('earlyMorningWarning').checked = isChecked;
+    
+    // Save and apply the changes
+    saveOptions();
+    applyPreferences();
+  });
+  
+  // Helper function to update the all features toggle
+  function updateAllFeaturesToggle() {
+    const allChecked = 
+      document.getElementById('conflictDetection').checked && 
+      document.getElementById('colorCoding').checked && 
+      document.getElementById('rmpIntegration').checked && 
+      document.getElementById('earlyMorningWarning').checked;
+      
+    document.getElementById('allFeatures').checked = allChecked;
+  }
+  
+  // Handle Schedule Builder button click
+  document.getElementById('goToScheduleBuilder').addEventListener('click', function() {
+    chrome.tabs.create({ url: 'https://my.ucdavis.edu/schedulebuilder' });
+  });
 
   // Extract events button
   document.getElementById('extractEvents').addEventListener('click', extractEvents);
