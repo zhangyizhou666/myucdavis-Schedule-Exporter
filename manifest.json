@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Aggie Schedule Mate",
   "version": "2.2.0",
-  "description": "Export UC Davis schedule to calendar with conflict detection, color coding, and RateMyProfessor integration",
+  "description": "Export UC Davis schedule to calendar with RateMyProfessor integration",
   "permissions": [
     "activeTab",
     "downloads",
