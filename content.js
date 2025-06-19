@@ -1,7 +1,5 @@
 // content.js
 let scheduleMatePreferences = {
-  conflictDetection: true,
-  colorCoding: true,
   rmpIntegration: true,
   earlyMorningWarning: true
 };
@@ -9,48 +7,7 @@ let scheduleMatePreferences = {
 // RateMyProfessor data
 let rmpData = null;
 
-// Schedule data
-let selectedSchedule = [];
-let finals = [];
 
-// Color constants
-const BLUE = "rgb(207, 228, 255)";
-const RED = "rgb(255, 220, 220)";
-const YELLOW = "rgb(255, 244, 112)";
-const GREEN = "rgb(206, 255, 206)";
-
-// Course class for conflict detection
-function Course(name, start, end, days) {
-  this.name = name;
-  this.days = days.replace(/,/g, '');
-  this.start = start;
-  this.end = end;
-  this.meetings = [{ days: this.days, start: this.start, end: this.end }];
-}
-
-Course.prototype.conflicts = function(class2) {
-  for (let day = 0; day < this.days.length; day++) {
-    const sameDay = class2.days.includes(this.days.charAt(day));
-    const sameTime = this.start <= class2.end && this.end >= class2.start;
-    if (sameDay && sameTime) {
-      return class2.name;
-    }
-  }
-  return false;
-}
-
-// Final exam class for conflict detection
-function Final(date, time) {
-  this.name;
-  this.date = date;
-  this.startTime = convertTime12to24(time).hours * 100 + convertTime12to24(time).minutes;
-  this.endTime = this.startTime + 200; // Assume 2 hours for final exam
-}
-
-Final.prototype.conflicts = function(final2) {
-  return this.date === final2.date &&
-    this.startTime <= final2.endTime && this.endTime >= final2.startTime;
-}
 
 // Helper function to convert AM/PM time to 24-hour format
 function convertTime12to24(time12) {
@@ -96,9 +53,6 @@ function initializeScheduleMate() {
   const isScheduleBuilderPage = window.location.href.includes('my.ucdavis.edu/schedulebuilder');
   console.log(`ScheduleMate: Current URL is ${window.location.href}, isScheduleBuilderPage: ${isScheduleBuilderPage}`);
   
-  // Add CSS styles for color coding (this is needed on all pages)
-  addScheduleMateStyles();
-  
   // Only initialize the full functionality on the schedule builder page
   if (!isScheduleBuilderPage) {
     console.log('ScheduleMate: Not on Schedule Builder page, skipping full initialization');
@@ -108,8 +62,6 @@ function initializeScheduleMate() {
   try {
   // Load saved preferences
   chrome.storage.sync.get({
-    conflictDetection: true,
-    colorCoding: true,
     rmpIntegration: true,
     earlyMorningWarning: true
   }, function(items) {
@@ -137,8 +89,6 @@ function initializeScheduleMate() {
 function useDefaultPreferences() {
   console.log('ScheduleMate: Using default preferences');
   scheduleMatePreferences = {
-    conflictDetection: true,
-    colorCoding: true,
     rmpIntegration: false, // Disable RMP by default in fallback mode
     earlyMorningWarning: true
   };
@@ -155,10 +105,7 @@ function completeInitialization() {
     // Note: RMP data display will be triggered by the loadRMPData function itself
     }
     
-    // Load current schedule for conflict detection
-    loadSchedule();
-    
-    // Apply color coding and other visual updates
+    // Apply visual updates
     updateUI();
   
   // Add the sort button
@@ -206,206 +153,7 @@ function addDynamicContentObserver() {
   console.log('ScheduleMate: Added dynamic content observer');
 }
 
-// Add CSS styles for color coding
-function addScheduleMateStyles() {
-  // Remove any existing styles to prevent duplicates
-  const existingStyle = document.getElementById('schedule-mate-styles');
-  if (existingStyle) existingStyle.remove();
-  
-  // Add CSS styles
-  const style = document.createElement('style');
-  style.id = 'schedule-mate-styles';
-  style.textContent = `
-    /* Course container colors */
-    .schedule-mate-available {
-      background-color: #dff0d8 !important;
-      border-color: #d6e9c6 !important;
-    }
-    
-    .schedule-mate-full {
-      background-color: #fcf8e3 !important;
-      border-color: #faebcc !important;
-    }
-    
-    .schedule-mate-conflict {
-      background-color: #f2dede !important;
-      border-color: #ebccd1 !important;
-    }
-    
-    .schedule-mate-blue {
-      background-color: #d9edf7 !important;
-      border-color: #bce8f1 !important;
-    }
-    
-    /* RMP Rating styles */
-    .schedule-mate-rating {
-      margin-left: 8px !important;
-      font-size: 12px !important;
-      border-radius: 4px !important;
-      padding: 2px 6px !important;
-      display: inline-block !important;
-      white-space: nowrap !important;
-    }
-    
-    .schedule-mate-rating-found {
-      background-color: #f8f9fa !important;
-      border: 1px solid #ddd !important;
-    }
-    
-    .schedule-mate-rating-not-found {
-      background-color: #f8f9fa !important;
-      border: 1px solid #ddd !important;
-      opacity: 0.8 !important;
-    }
-    
-    .schedule-mate-rating-quality {
-      color: #28a745 !important;
-      font-weight: bold !important;
-    }
-    
-    .schedule-mate-rating-difficulty {
-      color: #dc3545 !important;
-      font-weight: bold !important;
-    }
-    
-    .schedule-mate-take-again {
-      color: #007bff !important;
-      font-weight: bold !important;
-    }
-    
-    .schedule-mate-rmp-link {
-      color: #6c757d !important;
-      text-decoration: none !important;
-      font-weight: bold !important;
-      transition: color 0.2s !important;
-    }
-    
-    .schedule-mate-rmp-link:hover {
-      color: #0056b3 !important;
-      text-decoration: underline !important;
-    }
-    
-    /* Status indicators */
-    .schedule-mate-status {
-      display: inline-block !important;
-      margin-left: 5px !important;
-      font-size: 12px !important;
-      padding: 2px 6px !important;
-      border-radius: 4px !important;
-      font-weight: bold !important;
-    }
-    
-    .schedule-mate-early-morning-indicator {
-      background-color: #e6f7ff !important;
-      border: 1px solid #91d5ff !important;
-      color: #0050b3 !important;
-    }
-    
-    .schedule-mate-late-night-indicator {
-      background-color: #f9f0ff !important;
-      border: 1px solid #d3adf7 !important;
-      color: #531dab !important;
-    }
-    
-    /* Sort button styling */
-    .schedule-mate-sort-button {
-      position: fixed !important;
-      bottom: 20px !important;
-      right: 20px !important;
-      background-color: #28a745 !important;
-      color: white !important;
-      border: none !important;
-      border-radius: 50px !important;
-      padding: 12px 20px !important;
-      font-size: 14px !important;
-      font-weight: bold !important;
-      cursor: pointer !important;
-      z-index: 1000 !important;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.3) !important;
-      display: flex !important;
-      align-items: center !important;
-      transition: all 0.2s ease !important;
-    }
-    
-    .schedule-mate-sort-button:hover {
-      background-color: #218838 !important;
-      transform: translateY(-2px) !important;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
-    }
-    
-    /* Sort by Rating button styling */
-    .schedule-mate-sort-rating-button {
-      position: fixed !important;
-      bottom: 20px !important;
-      right: 210px !important; /* Adjusted position to create even spacing */
-      background-color: #6c43c0 !important; /* Purple color to distinguish from other buttons */
-      color: white !important;
-      border: none !important;
-      border-radius: 50px !important;
-      padding: 12px 20px !important;
-      font-size: 14px !important;
-      font-weight: bold !important;
-      cursor: pointer !important;
-      z-index: 1000 !important;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.3) !important;
-      display: flex !important;
-      align-items: center !important;
-      transition: all 0.2s ease !important;
-    }
-    
-    .schedule-mate-sort-rating-button:hover {
-      background-color: #5537a3 !important;
-      transform: translateY(-2px) !important;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
-    }
-    
-    .schedule-mate-sort-rating-button::before {
-      content: "⭐" !important;
-      margin-right: 6px !important;
-      font-size: 16px !important;
-    }
-    
-    .schedule-mate-sort-button::before {
-      content: "🎨" !important;
-      margin-right: 6px !important;
-      font-size: 16px !important;
-    }
-    
-    /* RMP reload button styling */
-    .schedule-mate-rmp-reload-button {
-      position: fixed !important;
-      bottom: 20px !important;
-      right: 400px !important; /* Adjusted position to create even spacing */
-      background-color: #17a2b8 !important; /* Info color */
-      color: white !important;
-      border: none !important;
-      border-radius: 50px !important;
-      padding: 12px 20px !important;
-      font-size: 14px !important;
-      font-weight: bold !important;
-      cursor: pointer !important;
-      z-index: 1000 !important;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.3) !important;
-      display: flex !important;
-      align-items: center !important;
-      transition: all 0.2s ease !important;
-    }
-    
-    .schedule-mate-rmp-reload-button:hover {
-      background-color: #138496 !important;
-      transform: translateY(-2px) !important;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
-    }
-    
-    .schedule-mate-rmp-reload-button::before {
-      content: "🌙" !important;
-      margin-right: 6px !important;
-      font-size: 16px !important;
-    }
-  `;
-  document.head.appendChild(style);
-  console.log('ScheduleMate: Added CSS styles for color coding');
-}
+
 
 // Load RateMyProfessor data
 function loadRMPData() {
@@ -564,9 +312,9 @@ function displayRMPData() {
         displayRMPLink(link, fullName, professorLegacyId);
       }
     } else {
-      console.log(`ScheduleMate: No legacy ID found for ${fullName}, using search link`);
-      // No data found, provide direct search link
-      displaySearchLink(link, fullName);
+      console.log(`ScheduleMate: No legacy ID found for ${fullName}, skipping RMP display`);
+      // No data found, don't display anything rather than showing a search link
+      // This avoids clutter and potential user confusion when searches won't yield results
     }
   });
   
@@ -605,10 +353,16 @@ function findProfessorLegacyId(fullName, emailId) {
     const lastName = nameParts.slice(1).join(' ').toLowerCase();
     console.log(`ScheduleMate: Looking for lastName "${lastName}" with firstInitial "${firstInitial}"`);
     
+    // Add minimum length requirement for last name to avoid false matches
+    if (lastName.length < 3) {
+      console.log(`ScheduleMate: Last name "${lastName}" too short, skipping abbreviated name matching`);
+      return null;
+    }
+    
     // 2. Create an array to store potential matches based on last name
     const lastNameMatches = [];
     
-    // First gather all professors with matching last name
+    // First gather all professors with matching last name - with stricter criteria
     for (const [professorName, legacyId] of Object.entries(rmpData.legacyIds)) {
       const profNameParts = professorName.split(/\s+/);
       
@@ -618,10 +372,28 @@ function findProfessorLegacyId(fullName, emailId) {
       // Get last name parts (everything except first name)
       const profLastName = profNameParts.slice(1).join(' ').toLowerCase();
       
-      // Check if last name matches (either exact or contains)
-      if (profLastName === lastName || 
-          profLastName.includes(lastName) || 
-          lastName.includes(profLastName)) {
+      // More strict matching criteria to prevent false positives
+      let isLastNameMatch = false;
+      
+      // Exact match is always good
+      if (profLastName === lastName) {
+        isLastNameMatch = true;
+      }
+      // For partial matches, require significant overlap and minimum similarity
+      else if (lastName.length >= 4 && profLastName.length >= 4) {
+        // Only allow contains relationship if there's significant overlap
+        const longerName = lastName.length > profLastName.length ? lastName : profLastName;
+        const shorterName = lastName.length > profLastName.length ? profLastName : lastName;
+        
+        // Calculate similarity - the shorter name should be a significant portion of the longer
+        const overlapRatio = shorterName.length / longerName.length;
+        
+        if (overlapRatio >= 0.6 && (profLastName.includes(lastName) || lastName.includes(profLastName))) {
+          isLastNameMatch = true;
+        }
+      }
+      
+      if (isLastNameMatch) {
         // Store this match
         lastNameMatches.push({
           fullName: professorName,
@@ -644,10 +416,10 @@ function findProfessorLegacyId(fullName, emailId) {
         }
       }
       
-      // If no match on first initial or no first initial provided, just return the first last name match
-      // This handles cases where the first initial might be wrong but last name is unique enough
-      console.log(`ScheduleMate: No first initial match, using first last name match: ${lastNameMatches[0].fullName} (${lastNameMatches[0].legacyId})`);
-      return lastNameMatches[0].legacyId;
+      // REMOVED: The problematic fallback that caused false matches
+      // Instead of returning the first match when no initial matches, return null
+      console.log(`ScheduleMate: No first initial match found for "${fullName}", avoiding false match`);
+      return null;
     }
     
     // Special cases for compound or hyphenated names
@@ -672,54 +444,73 @@ function findProfessorLegacyId(fullName, emailId) {
     }
     
     // For names that might be challenging to match, let's try a more flexible approach
-    // Try to find any professors whose last name contains any significant part of our last name
-    for (let i = 1; i < nameParts.length; i++) {
-      const partialLastName = nameParts[i].toLowerCase();
-      
-      // Skip if too short
-      if (partialLastName.length <= 2) continue;
-      
-      for (const [professorName, legacyId] of Object.entries(rmpData.legacyIds)) {
-        const profNameParts = professorName.split(/\s+/);
+    // But only if the last name is reasonably long to avoid false matches
+    if (lastName.length >= 5) {
+      for (let i = 1; i < nameParts.length; i++) {
+        const partialLastName = nameParts[i].toLowerCase();
         
-        // Skip if there aren't enough parts or the first part doesn't match initial
-        if (profNameParts.length < 2) continue;
-        if (!profNameParts[0].toLowerCase().startsWith(firstInitial)) continue;
+        // Skip if too short to avoid false positives
+        if (partialLastName.length <= 3) continue;
         
-        // Check if any part of the professor name contains this partial last name
-        let lastNameMatched = false;
-        for (let j = 1; j < profNameParts.length; j++) {
-          const profLastNamePart = profNameParts[j].toLowerCase();
-          if (profLastNamePart.includes(partialLastName) || 
-              partialLastName.includes(profLastNamePart)) {
-            lastNameMatched = true;
-            break;
+        for (const [professorName, legacyId] of Object.entries(rmpData.legacyIds)) {
+          const profNameParts = professorName.split(/\s+/);
+          
+          // Skip if there aren't enough parts or the first part doesn't match initial
+          if (profNameParts.length < 2) continue;
+          if (!profNameParts[0].toLowerCase().startsWith(firstInitial)) continue;
+          
+          // Check if any part of the professor name contains this partial last name
+          let lastNameMatched = false;
+          for (let j = 1; j < profNameParts.length; j++) {
+            const profLastNamePart = profNameParts[j].toLowerCase();
+            
+            // More strict matching for partial names
+            if (profLastNamePart === partialLastName || 
+                (partialLastName.length >= 4 && profLastNamePart.includes(partialLastName))) {
+              lastNameMatched = true;
+              break;
+            }
           }
-        }
-        
-        if (lastNameMatched) {
-          console.log(`ScheduleMate: Found flexible match for ${fullName}: ${professorName} (${legacyId})`);
-          return legacyId;
+          
+          if (lastNameMatched) {
+            console.log(`ScheduleMate: Found flexible match for ${fullName}: ${professorName} (${legacyId})`);
+            return legacyId;
+          }
         }
       }
     }
   }
 
-  // Normalize name for comparison (fallback approach)
+  // Normalize name for comparison (fallback approach) - with stricter criteria
   const normalizedName = fullName.toLowerCase()
     .replace(/\./g, '') // Remove periods
     .replace(/\s+/g, ''); // Remove spaces
   
-  for (const [key, value] of Object.entries(rmpData.legacyIds)) {
-    const normalizedKey = key.toLowerCase()
-      .replace(/\./g, '')
-      .replace(/\s+/g, '');
-    
-    if (normalizedName === normalizedKey || 
-        normalizedName.includes(normalizedKey) || 
-        normalizedKey.includes(normalizedName)) {
-      console.log(`ScheduleMate: Found legacy ID for ${fullName} by name similarity: ${key}`);
-      return value;
+  // Only proceed with normalization if the name is reasonably long
+  if (normalizedName.length >= 6) {
+    for (const [key, value] of Object.entries(rmpData.legacyIds)) {
+      const normalizedKey = key.toLowerCase()
+        .replace(/\./g, '')
+        .replace(/\s+/g, '');
+      
+      // Exact normalized match is good
+      if (normalizedName === normalizedKey) {
+        console.log(`ScheduleMate: Found legacy ID for ${fullName} by exact normalized match: ${key}`);
+        return value;
+      }
+      
+      // For partial matches, require significant similarity
+      if (normalizedName.length >= 8 && normalizedKey.length >= 8) {
+        const longerName = normalizedName.length > normalizedKey.length ? normalizedName : normalizedKey;
+        const shorterName = normalizedName.length > normalizedKey.length ? normalizedKey : normalizedName;
+        const overlapRatio = shorterName.length / longerName.length;
+        
+        if (overlapRatio >= 0.8 && 
+            (normalizedName.includes(normalizedKey) || normalizedKey.includes(normalizedName))) {
+          console.log(`ScheduleMate: Found legacy ID for ${fullName} by high-confidence normalized match: ${key}`);
+          return value;
+        }
+      }
     }
   }
   
@@ -767,7 +558,7 @@ function displayProfessorInfo(link, professorInfo, legacyId) {
     if (!isNaN(takeAgainPercent)) {
       const takeAgainSpan = document.createElement('span');
       takeAgainSpan.className = 'schedule-mate-take-again';
-      takeAgainSpan.textContent = `${takeAgainPercent}%`;
+      takeAgainSpan.textContent = `${Math.round(takeAgainPercent)}%`;
       takeAgainSpan.title = 'Would Take Again Percentage';
       
       // Add the take again percentage to the rating element
@@ -826,54 +617,8 @@ function displayRMPLink(link, fullName, legacyId) {
   console.log(`ScheduleMate: Added RMP link for ${fullName} with ID ${legacyId}`);
 }
 
-// Display search link when we have no data for this professor
-function displaySearchLink(link, fullName) {
-  // Create element for professors not found in our database
-  const searchElement = document.createElement('span');
-  searchElement.className = 'schedule-mate-rating schedule-mate-rating-not-found';
-  
-  // Check if we should try to extract last name for a better search
-  const nameParts = fullName.split(/\s+/);
-  let searchQuery;
-  
-  if (nameParts.length >= 2) {
-    // If it's an abbreviated name like "S. Saltzen"
-    if (nameParts[0].endsWith('.')) {
-      // For abbreviated names, try to create a better search query
-      // If we have multiple parts after the initial, include all of them as potential last name
-      if (nameParts.length > 2) {
-        // For compound last names like "M. Sadoghi Hamedani" or "J. Porquet-Lupine"
-        searchQuery = encodeURIComponent(`${nameParts.slice(1).join(' ')} UC Davis`);
-      } else {
-        // Just use last name for search to increase chances of finding the professor
-        searchQuery = encodeURIComponent(`${nameParts[nameParts.length - 1]} UC Davis`);
-      }
-    } else {
-      // Use full name
-      searchQuery = encodeURIComponent(`${fullName} UC Davis`);
-    }
-  } else {
-    // Fallback to whatever name we have
-    searchQuery = encodeURIComponent(`${fullName} UC Davis`);
-  }
-  
-  // Create direct RMP search link using the school ID for UC Davis
-  const rmpSearchLink = document.createElement('a');
-  // Use the proper search URL for RateMyProfessors
-  rmpSearchLink.href = `https://www.ratemyprofessors.com/search/teachers?query=${searchQuery}&sid=1073`;
-  rmpSearchLink.target = '_blank';
-  rmpSearchLink.className = 'schedule-mate-rmp-link';
-  rmpSearchLink.textContent = 'Search on RMP';
-  rmpSearchLink.title = 'Search for this professor on RateMyProfessors';
-  
-  // Assemble search element
-  searchElement.appendChild(rmpSearchLink);
-  
-  // Insert after professor link
-  link.parentNode.insertBefore(searchElement, link.nextSibling);
-  
-  console.log(`ScheduleMate: Added RMP search link for ${fullName} using query: ${searchQuery}`);
-}
+// Note: displaySearchLink function removed as we no longer show search links
+// When no professor data is found, we simply don't display anything
 
 // Use fallback RMP data when fetch fails
 function useFallbackRMPData() {
@@ -904,105 +649,12 @@ function useFallbackRMPData() {
       }
 }
 
-// Load current schedule for conflict detection
-function loadSchedule() {
-  console.log('ScheduleMate: Loading schedule...');
-  selectedSchedule = [];
-  finals = [];
-  
-  // Find all selected courses
-  const selectedCourses = document.querySelectorAll('.course-container');
-  console.log(`ScheduleMate: Found ${selectedCourses.length} course containers`);
-  
-  selectedCourses.forEach((course, index) => {
-    // Check if this is in the saved courses section (not in search results)
-    const isSaved = course.querySelector('.btn-success');
-    if (isSaved) {
-      console.log(`ScheduleMate: Processing saved course ${index + 1}`);
-      
-      // Get course title
-      const title = course.querySelector('.results-title')?.textContent || '';
-      console.log(`ScheduleMate: Course title: "${title}"`);
-      
-      // Get final exam info if available
-      const finalExamText = course.querySelector('.more-final')?.textContent || '';
-      if (finalExamText && finalExamText.includes('Final Exam:')) {
-        const finalInfo = finalExamText.split('Final Exam:')[1].trim();
-        const [datePart, timePart] = finalInfo.split(/\s+(?=\d+:\d+)/);
-        
-        if (datePart && timePart) {
-          const final = new Final(datePart.trim(), timePart.trim());
-          final.name = title + " Final";
-          finals.push(final);
-        }
-      }
-      
-      // Get meeting times
-      const meetings = course.querySelectorAll('.meeting-item');
-      meetings.forEach(meeting => {
-        // Get meeting details by finding the divs inside the meeting-item
-        const divs = meeting.querySelectorAll('div');
-        let daysText = '';
-        let timeText = '';
-        let location = '';
-        let type = '';
-        
-        // Iterate through meeting divs to extract data
-        divs.forEach((div, index) => {
-          const text = div.textContent.trim();
-          
-          // Check if this contains time (contains : and AM/PM)
-          if (text.match(/\d+:\d+\s*(AM|PM)/i)) {
-            timeText = text;
-          } 
-          // Check if this contains days (M,T,W,R,F)
-          else if (text.match(/^[MTWRF,\s]+$/i) || text.match(/^(Mon|Tue|Wed|Thu|Fri|M|T|W|R|F)([,\s]+)?(Mon|Tue|Wed|Thu|Fri|M|T|W|R|F)?([,\s]+)?(Mon|Tue|Wed|Thu|Fri|M|T|W|R|F)?/i)) {
-            daysText = text;
-            // Convert any full day names to short codes
-            daysText = daysText.replace(/Monday|Mon/gi, 'M')
-                               .replace(/Tuesday|Tue/gi, 'T')
-                               .replace(/Wednesday|Wed/gi, 'W')
-                               .replace(/Thursday|Thu/gi, 'R')
-                               .replace(/Friday|Fri/gi, 'F');
-          }
-          // Check if this is a location (typically last div)
-          else if (index === divs.length - 1 && text) {
-            location = text;
-          }
-          // Check if this is a type (Lecture, Discussion, etc.)
-          else if (text.match(/(Lecture|Discussion|Lab|Seminar)/i)) {
-            type = text;
-          }
-        });
-        
-        if (timeText && daysText) {
-          const timeRange = parseTimeRange(timeText);
-          
-          // Handle days with commas
-          const days = daysText.replace(/\s+/g, '');
-          
-          // Convert times to numeric for comparison
-          const startTimeParts = timeRange.start.split(':').map(Number);
-          const endTimeParts = timeRange.end.split(':').map(Number);
-          const startTime = startTimeParts[0] * 100 + startTimeParts[1];
-          const endTime = endTimeParts[0] * 100 + endTimeParts[1];
-          
-          const newClass = new Course(title, startTime, endTime, days);
-          selectedSchedule.push(newClass);
-        }
-      });
-    }
-  });
-  
-  console.log(`ScheduleMate: Loaded ${selectedSchedule.length} courses for conflict detection`);
-}
+
 
 // Update UI based on preferences
 function updateUI() {
   console.log('ScheduleMate: Updating UI...');
-  if (!scheduleMatePreferences.colorCoding && 
-      !scheduleMatePreferences.conflictDetection && 
-      !scheduleMatePreferences.rmpIntegration &&
+  if (!scheduleMatePreferences.rmpIntegration &&
       !scheduleMatePreferences.earlyMorningWarning) {
     console.log('ScheduleMate: All features disabled, skipping UI update');
     return;
@@ -1031,209 +683,15 @@ function updateCourseUI(course) {
     return;
   }
 
-  // Check if this course is already in the selected schedule
-  const isSaved = course.querySelector('.btn-success');
   const titleElement = course.querySelector('.results-title');
-  const originalTitle = titleElement?.textContent?.replace(/\s*\([^)]*\)\s*$/, '') || '';
-  const title = originalTitle;
+  const title = titleElement?.textContent || '';
   const crn = course.querySelector('.results-crn')?.textContent || '';
   
-  console.log(`ScheduleMate: Processing course "${title}" (CRN: ${crn}), isSaved: ${!!isSaved}`);
+  console.log(`ScheduleMate: Processing course "${title}" (CRN: ${crn})`);
   
   // Check for early morning classes if that preference is enabled
   if (scheduleMatePreferences.earlyMorningWarning) {
     checkForEarlyMorningClass(course);
-  }
-  
-  if (isSaved) {
-    // Course is already in schedule - mark blue
-    if (scheduleMatePreferences.colorCoding) {
-      console.log(`ScheduleMate: Marking course "${title}" as blue (in schedule)`);
-      
-      // Remove any existing color classes first
-      course.classList.remove('schedule-mate-conflict', 'schedule-mate-full', 'schedule-mate-available');
-      
-      // Add blue class
-      course.classList.add('schedule-mate-blue');
-      
-      // Add status label
-      addStatusLabel(course, 'IN SCHEDULE', 'schedule');
-    }
-    // Mark as processed
-    course.setAttribute('data-schedule-mate-processed', 'true');
-    return;
-  }
-  
-  // First check if there's an existing conflict alert in the HTML
-  const conflictAlert = course.querySelector('.results-alert.alert-error');
-  if (conflictAlert && conflictAlert.textContent.includes('time conflict')) {
-    console.log(`ScheduleMate: Found existing conflict alert: "${conflictAlert.textContent}"`);
-    
-    if (scheduleMatePreferences.colorCoding) {
-      console.log(`ScheduleMate: Marking course as red (based on existing conflict alert)`);
-      
-      // Remove any existing color classes first
-      course.classList.remove('schedule-mate-blue', 'schedule-mate-full', 'schedule-mate-available');
-      
-      // Add conflict class
-      course.classList.add('schedule-mate-conflict');
-      
-      // Add status label
-      addStatusLabel(course, 'CONFLICT', 'conflict');
-    }
-    
-    // Mark as processed
-    course.setAttribute('data-schedule-mate-processed', 'true');
-    return;
-  }
-  
-  // Get meeting times to check for conflicts
-  const meetings = course.querySelectorAll('.meeting-item');
-  console.log(`ScheduleMate: Found ${meetings.length} meetings for this course`);
-  
-  let hasConflict = false;
-  let conflictName = '';
-  let isFull = false;
-  
-  // Check if course is full
-  const seatsInfo = course.querySelector('.results-seats')?.textContent || '';
-  if (seatsInfo) {
-    const [available] = seatsInfo.split('/').map(n => parseInt(n.trim()));
-    isFull = available <= 0;
-    console.log(`ScheduleMate: Course seats: ${seatsInfo}, isFull: ${isFull}`);
-  }
-  
-  // Check for conflicts if conflict detection is enabled
-  if (scheduleMatePreferences.conflictDetection) {
-    console.log(`ScheduleMate: Checking for conflicts against ${selectedSchedule.length} saved courses`);
-    
-    meetings.forEach((meeting, idx) => {
-      if (hasConflict) return;
-      
-      // Get meeting details by finding the divs inside the meeting-item
-      const divs = meeting.querySelectorAll('div');
-      console.log(`ScheduleMate: Meeting ${idx + 1} has ${divs.length} divs`);
-      
-      // DEBUG: Log all div contents
-      divs.forEach((div, i) => {
-        console.log(`ScheduleMate: Meeting ${idx + 1}, Div ${i + 1} content: "${div.textContent.trim()}"`);
-      });
-      
-      let daysText = '';
-      let timeText = '';
-      
-      // Iterate through meeting divs to extract data
-      divs.forEach((div, index) => {
-        const text = div.textContent.trim();
-        
-        // Check if this contains time (contains : and AM/PM)
-        if (text.match(/\d+:\d+\s*(AM|PM)/i)) {
-          timeText = text;
-        } 
-        // Check if this contains days (M,T,W,R,F)
-        else if (text.match(/^[MTWRF,\s]+$/i) || text.match(/^(Mon|Tue|Wed|Thu|Fri|M|T|W|R|F)([,\s]+)?(Mon|Tue|Wed|Thu|Fri|M|T|W|R|F)?([,\s]+)?(Mon|Tue|Wed|Thu|Fri|M|T|W|R|F)?/i)) {
-          daysText = text;
-          // Convert any full day names to short codes
-          daysText = daysText.replace(/Monday|Mon/gi, 'M')
-                             .replace(/Tuesday|Tue/gi, 'T')
-                             .replace(/Wednesday|Wed/gi, 'W')
-                             .replace(/Thursday|Thu/gi, 'R')
-                             .replace(/Friday|Fri/gi, 'F');
-        }
-      });
-      
-      console.log(`ScheduleMate: Extracted time: "${timeText}", days: "${daysText}"`);
-      
-      if (timeText && timeText !== 'TBA' && daysText && daysText !== 'TBA') {
-        // Convert days with commas to an array of individual days
-        const days = daysText.replace(/\s+/g, '').split(',');
-        console.log(`ScheduleMate: Parsed days: ${JSON.stringify(days)}`);
-        
-        const timeRange = parseTimeRange(timeText);
-        console.log(`ScheduleMate: Parsed time range: ${JSON.stringify(timeRange)}`);
-        
-        // Check against all saved courses
-        selectedSchedule.forEach((existingCourse, courseIdx) => {
-          if (hasConflict) return;
-          
-          console.log(`ScheduleMate: Checking against saved course ${courseIdx + 1}: "${existingCourse.name}"`);
-          console.log(`ScheduleMate: Saved course days: "${existingCourse.days}", time: ${existingCourse.start}-${existingCourse.end}`);
-          
-          // Convert timeRange to numeric for comparison
-          const startTimeParts = timeRange.start.split(':').map(Number);
-          const endTimeParts = timeRange.end.split(':').map(Number);
-          const startTime = startTimeParts[0] * 100 + startTimeParts[1];
-          const endTime = endTimeParts[0] * 100 + endTimeParts[1];
-          console.log(`ScheduleMate: Converted time: ${startTime}-${endTime}`);
-          
-          // Check if any days overlap
-          for (let i = 0; i < days.length; i++) {
-            const day = days[i];
-            // Skip empty days
-            if (!day) continue;
-            
-            console.log(`ScheduleMate: Checking day "${day}" against "${existingCourse.days}"`);
-            
-            // Check if this day exists in the existing course's days
-            if (existingCourse.days.includes(day)) {
-              console.log(`ScheduleMate: Day "${day}" matches!`);
-              
-              // Check time overlap
-              if (startTime <= existingCourse.end && endTime >= existingCourse.start) {
-                hasConflict = true;
-                conflictName = existingCourse.name;
-                console.log(`ScheduleMate: TIME CONFLICT DETECTED with "${conflictName}"!`);
-                break;
-              }
-            }
-          }
-        });
-      }
-    });
-  }
-  
-  // Update course UI based on conflict detection result
-  if (hasConflict) {
-    if (scheduleMatePreferences.colorCoding) {
-      console.log(`ScheduleMate: Marking course as red (conflict with "${conflictName}")`);
-      
-      // Remove any existing color classes first
-      course.classList.remove('schedule-mate-blue', 'schedule-mate-full', 'schedule-mate-available');
-      
-      // Add conflict class
-      course.classList.add('schedule-mate-conflict');
-      
-      // Add status label
-      addStatusLabel(course, 'CONFLICT', 'conflict');
-    }
-    titleElement.textContent = `${originalTitle} (${conflictName})`;
-  } else if (isFull) {
-    if (scheduleMatePreferences.colorCoding) {
-      console.log(`ScheduleMate: Marking course as yellow (full)`);
-      
-      // Remove any existing color classes first
-      course.classList.remove('schedule-mate-blue', 'schedule-mate-conflict', 'schedule-mate-available');
-      
-      // Add full class
-      course.classList.add('schedule-mate-full');
-      
-      // Add status label
-      addStatusLabel(course, 'FULL', 'full');
-    }
-    titleElement.textContent = `${originalTitle} (Full)`;
-  } else {
-    if (scheduleMatePreferences.colorCoding) {
-      console.log(`ScheduleMate: Marking course as green (available)`);
-      
-      // Remove any existing color classes first
-      course.classList.remove('schedule-mate-blue', 'schedule-mate-conflict', 'schedule-mate-full');
-      
-      // Add available class
-      course.classList.add('schedule-mate-available');
-      
-      // Add status label
-      addStatusLabel(course, 'AVAILABLE', 'available');
-    }
   }
   
   // Mark this course as processed
@@ -1314,7 +772,7 @@ function checkForEarlyMorningClass(course) {
     // Create new indicator
     const indicator = document.createElement('div');
     indicator.className = 'schedule-mate-early-morning-indicator';
-    indicator.innerHTML = `⏰ Early Morning Class (${formattedTime})`;
+    indicator.innerHTML = `⏰ Early Class (${formattedTime})`;
     indicator.dataset.timeType = 'early'; // Add data attribute for filtering
     
     // Add it to the course container
@@ -1341,7 +799,7 @@ function checkForEarlyMorningClass(course) {
     // Create new indicator
     const indicator = document.createElement('div');
     indicator.className = 'schedule-mate-late-night-indicator';
-    indicator.innerHTML = `🌙 Late Night Class (${formattedTime})`;
+    indicator.innerHTML = `🌙 Late Class (${formattedTime})`;
     indicator.dataset.timeType = 'late'; // Add data attribute for filtering
     
     // Add it to the course container
@@ -1629,14 +1087,7 @@ window.addEventListener('load', function() {
   }
 });
 
-// Reset processing state for all courses
-function resetProcessingState() {
-  // Remove the processed flag from all course containers
-  document.querySelectorAll('.course-container[data-schedule-mate-processed]').forEach(course => {
-    course.removeAttribute('data-schedule-mate-processed');
-  });
-  console.log('ScheduleMate: Reset processing state for all courses');
-}
+
 
 // Message listener for the export functionality
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -1673,20 +1124,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   return true;
 });
 
-// Add a status label to a course
-function addStatusLabel(course, text, type) {
-  // Remove any existing status labels
-  const existingLabels = course.querySelectorAll('.schedule-mate-status-label');
-  existingLabels.forEach(label => label.remove());
-  
-  // Create the status label
-  const label = document.createElement('div');
-  label.className = `schedule-mate-status-label schedule-mate-status-${type}`;
-  label.textContent = text;
-  
-  // Add it to the course
-  course.appendChild(label);
-}
+
 
 // Add sort button to the page
 function addSortButton() {
@@ -1697,243 +1135,68 @@ function addSortButton() {
   const existingRatingButton = document.querySelector('.schedule-mate-sort-rating-button');
   if (existingRatingButton) existingRatingButton.remove();
   
-  // Add color sorting button if color coding is enabled
-  if (scheduleMatePreferences.colorCoding) {
-    const sortButton = document.createElement('button');
-    sortButton.className = 'schedule-mate-sort-button';
-    sortButton.textContent = 'Sort by Color';
-    sortButton.addEventListener('click', sortCoursesByColor);
-    
-    document.body.appendChild(sortButton);
-    console.log('ScheduleMate: Added sort by color button');
-  }
-  
   // Add rating sorting button if RMP integration is enabled
   if (scheduleMatePreferences.rmpIntegration) {
     const sortRatingButton = document.createElement('button');
-    sortRatingButton.className = 'schedule-mate-sort-rating-button';
-    sortRatingButton.textContent = 'Sort by Rating';
-    sortRatingButton.addEventListener('click', sortCoursesByRating);
+    sortRatingButton.className = 'schedule-mate-sort-rating-button collapsed';
+    sortRatingButton.title = 'Click to sort courses by professor rating';
+    
+    // Create button structure with icon and text
+    const buttonIcon = document.createElement('span');
+    buttonIcon.className = 'button-icon';
+    buttonIcon.textContent = '⭐';
+    
+    const buttonText = document.createElement('span');
+    buttonText.className = 'button-text';
+    buttonText.textContent = 'Sort by Rating';
+    
+    sortRatingButton.appendChild(buttonIcon);
+    sortRatingButton.appendChild(buttonText);
+    
+    // Track expanded state
+    let isExpanded = false;
+    
+    // Click handler for expand/collapse and sorting
+    sortRatingButton.addEventListener('click', (e) => {
+      if (!isExpanded) {
+        // First click: expand the button
+        isExpanded = true;
+        sortRatingButton.classList.remove('collapsed');
+        sortRatingButton.classList.add('expanded');
+        sortRatingButton.title = 'Click to sort courses by professor rating';
+        
+        // Auto-collapse after 4 seconds if not clicked again
+        setTimeout(() => {
+          if (isExpanded && sortRatingButton.classList.contains('expanded')) {
+            isExpanded = false;
+            sortRatingButton.classList.remove('expanded');
+            sortRatingButton.classList.add('collapsed');
+            sortRatingButton.title = 'Click to expand and sort by rating';
+          }
+        }, 4000);
+        
+      } else {
+        // Second click: execute sorting function
+        sortCoursesByRating();
+        
+        // Collapse the button after sorting
+        setTimeout(() => {
+          isExpanded = false;
+          sortRatingButton.classList.remove('expanded');
+          sortRatingButton.classList.add('collapsed');
+          sortRatingButton.title = 'Click to expand and sort by rating';
+        }, 500);
+      }
+    });
+    
+    // Hover behavior is now handled entirely by CSS - no JavaScript needed
     
     document.body.appendChild(sortRatingButton);
-    console.log('ScheduleMate: Added sort by rating button');
-  }
-  
-  // Add RMP reload button if RMP integration is enabled
-  if (scheduleMatePreferences.rmpIntegration) {
-    addRMPReloadButton();
+    console.log('ScheduleMate: Added collapsible sort by rating button');
   }
 }
 
-// Add button to hide early/late classes
-function addRMPReloadButton() {
-  // Remove any existing RMP reload buttons
-  const existingButton = document.querySelector('.schedule-mate-rmp-reload-button');
-  if (existingButton) existingButton.remove();
-  
-  // Remove any existing browse buttons
-  const existingBrowseButton = document.querySelector('.schedule-mate-browse-rmp-button');
-  if (existingBrowseButton) existingBrowseButton.remove();
-  
-  // Create hide early/late classes button
-  const hideButton = document.createElement('button');
-  hideButton.className = 'schedule-mate-rmp-reload-button'; // Reuse the same class for positioning
-  hideButton.textContent = 'Hide Early/Late Classes';
-  hideButton.title = 'Hide or show early morning and late night classes';
-  
-  // Track state
-  hideButton.dataset.hidden = 'false';
-  
-  hideButton.addEventListener('click', () => {
-    const isHidden = hideButton.dataset.hidden === 'true';
-    
-    // Toggle state
-    hideButton.dataset.hidden = isHidden ? 'false' : 'true';
-    hideButton.textContent = isHidden ? 'Hide Early/Late Classes' : 'Show Early/Late Classes';
-    
-    // Check if classes are already fully loaded
-    const totalClassesOnPage = document.querySelectorAll('.course-container').length;
-    let allClassesLoaded = false;
-    
-    // If we have a significant number of classes already loaded, assume they're all loaded
-    // This threshold could be adjusted based on experience
-    if (totalClassesOnPage > 50) {
-      allClassesLoaded = true;
-      console.log(`ScheduleMate: Detected ${totalClassesOnPage} classes already loaded, skipping loading step`);
-    }
-    
-    if (allClassesLoaded) {
-      // Skip loading and directly toggle visibility
-      console.log('ScheduleMate: Classes already loaded, proceeding with toggle');
-      showNotification(isHidden ? 'Showing all classes...' : 'Hiding early/late classes...', 3000);
-      toggleEarlyLateClasses(!isHidden);
-      
-      // Scroll back to the top of the page
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-    } else {
-      // Show loading notification
-      showNotification(isHidden ? 'Loading all classes and showing them...' : 'Loading all classes and hiding early/late ones...', 3000);
-      
-      // Load all classes, then toggle visibility
-      forceLoadAllCourses()
-        .then(() => {
-          console.log('ScheduleMate: All classes loaded, now toggling early/late classes');
-          // Toggle visibility of early/late classes
-          toggleEarlyLateClasses(!isHidden); // !isHidden because we're toggling to the new state
-          
-          // Scroll back to the top of the page
-          window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-          });
-          
-          // Show confirmation notification
-          showNotification(isHidden ? 'Showing all classes' : 'Hiding early morning and late night classes', 3000);
-        })
-        .catch(error => {
-          console.error('ScheduleMate: Error loading all classes:', error);
-          // Try to toggle with what we have available
-          toggleEarlyLateClasses(!isHidden);
-          
-          // Scroll back to the top of the page
-          window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-          });
-          
-          // Show notification
-          showNotification(isHidden ? 
-            'Showing all currently loaded classes' : 
-            'Hiding early/late classes that are currently loaded', 3000);
-        });
-    }
-  });
-  
-  document.body.appendChild(hideButton);
-  console.log('ScheduleMate: Added Hide Early/Late Classes button');
-}
 
-// Toggle visibility of early/late classes
-function toggleEarlyLateClasses(hide) {
-  // Find all courses with early/late indicators
-  const earlyIndicators = document.querySelectorAll('.schedule-mate-early-morning-indicator');
-  const lateIndicators = document.querySelectorAll('.schedule-mate-late-night-indicator');
-  
-  let earlyCount = 0;
-  let lateCount = 0;
-  
-  // Function to toggle a course container
-  const toggleCourse = (indicator, hide) => {
-    // Try multiple approaches to find the course container
-    
-    // Approach 1: Using closest
-    let courseContainer = indicator.closest('.course-container');
-    
-    // Approach 2: If closest fails, try walking up the DOM tree
-    if (!courseContainer) {
-      let parent = indicator.parentElement;
-      const maxDepth = 10; // Prevent infinite loops
-      let depth = 0;
-      
-      while (parent && depth < maxDepth) {
-        // Check if this element or any of its children has the course-container class
-        if (parent.classList && parent.classList.contains('course-container')) {
-          courseContainer = parent;
-          break;
-        }
-        
-        // Also check for common course container identifiers
-        if (parent.querySelector && (
-            parent.querySelector('.results-title') || 
-            parent.querySelector('.meeting-item') ||
-            parent.querySelector('.results-seats'))) {
-          courseContainer = parent;
-          break;
-        }
-        
-        parent = parent.parentElement;
-        depth++;
-      }
-    }
-    
-    // If we found a container, toggle its visibility
-    if (courseContainer) {
-      if (hide) {
-        // Ensure we're hiding the topmost container that represents a course
-        // Sometimes the course container might be nested in another element
-        let topContainer = courseContainer;
-        let parent = courseContainer.parentElement;
-        
-        // Try to find if the course is part of a larger container
-        while (parent && parent !== document.body) {
-          // If parent contains multiple course containers, we don't want to hide the parent
-          if (parent.querySelectorAll('.course-container').length > 1) {
-            break;
-          }
-          
-          // If parent looks like a course item wrapper, use that instead
-          if (parent.classList && (
-              parent.classList.contains('course-item') ||
-              parent.classList.contains('results-item') ||
-              parent.classList.contains('search-result'))) {
-            topContainer = parent;
-          }
-          
-          parent = parent.parentElement;
-        }
-        
-        // Apply hiding to the topmost appropriate container
-        topContainer.style.display = 'none';
-        topContainer.dataset.scheduleMateSuppressed = 'true';
-      } else {
-        // When showing, find all suppressed elements
-        const suppressedElements = document.querySelectorAll('[data-schedule-mate-suppressed="true"]');
-        suppressedElements.forEach(element => {
-          element.style.display = '';
-          delete element.dataset.scheduleMateSuppressed;
-        });
-        
-        // Also ensure this specific container is shown
-        courseContainer.style.display = '';
-        delete courseContainer.dataset.scheduleMateSuppressed;
-      }
-      return true; // Successfully toggled
-    }
-    
-    return false; // Failed to find container
-  };
-  
-  if (!hide) {
-    // When showing, it's more efficient to just show all suppressed elements at once
-    const suppressedElements = document.querySelectorAll('[data-schedule-mate-suppressed="true"]');
-    suppressedElements.forEach(element => {
-      element.style.display = '';
-      delete element.dataset.scheduleMateSuppressed;
-    });
-    
-    earlyCount = earlyIndicators.length;
-    lateCount = lateIndicators.length;
-  } else {
-    // Toggle early morning classes
-    earlyIndicators.forEach(indicator => {
-      if (toggleCourse(indicator, hide)) {
-        earlyCount++;
-      }
-    });
-    
-    // Toggle late night classes
-    lateIndicators.forEach(indicator => {
-      if (toggleCourse(indicator, hide)) {
-        lateCount++;
-      }
-    });
-  }
-  
-  console.log(`ScheduleMate: ${hide ? 'Hid' : 'Showed'} ${earlyCount} early and ${lateCount} late classes`);
-}
 
 // Clear existing RMP data displays
 function clearRMPDisplays() {
@@ -1943,123 +1206,7 @@ function clearRMPDisplays() {
   console.log(`ScheduleMate: Cleared ${ratings.length} RMP displays`);
 }
 
-// Sort courses by their color status
-function sortCoursesByColor() {
-  console.log('ScheduleMate: Sorting courses by color...');
-  
-  // Check if classes are already fully loaded
-  const totalClassesOnPage = document.querySelectorAll('.course-container').length;
-  let allClassesLoaded = false;
-  
-  // If we have a significant number of classes already loaded, assume they're all loaded
-  // This threshold could be adjusted based on experience
-  if (totalClassesOnPage > 50) {
-    allClassesLoaded = true;
-    console.log(`ScheduleMate: Detected ${totalClassesOnPage} classes already loaded, skipping loading step`);
-  }
-  
-  if (allClassesLoaded) {
-    // Skip loading and directly process and sort courses
-    console.log('ScheduleMate: Classes already loaded, proceeding with sorting');
-    showNotification('Sorting classes by color...', 3000);
-    processSortCourses();
-  } else {
-    // Show loading notification
-    showNotification('Loading all courses...', 60000); // Long timeout in case loading takes time
-    
-    // First, try to force load all content by scrolling to the bottom
-    forceLoadAllCourses()
-      .then(() => {
-        // Then process and sort all courses
-        processSortCourses();
-      })
-      .catch(error => {
-        console.error('ScheduleMate: Error loading all courses', error);
-        // Try to sort anyway with what we have
-        processSortCourses();
-      });
-  }
-}
 
-// Function to process and sort courses
-function processSortCourses() {
-  // Process all courses to ensure they have colors
-  const courseContainers = document.querySelectorAll('.course-container');
-  
-  if (courseContainers.length === 0) {
-    console.log('ScheduleMate: No courses found to sort');
-    hideNotification();
-    showNotification('No courses found to sort', 3000);
-    return;
-  }
-  
-  console.log(`ScheduleMate: Processing ${courseContainers.length} courses for sorting`);
-  
-  // First, ensure all courses are processed for color coding
-  courseContainers.forEach(course => {
-    // Remove the processed flag so it will be reprocessed
-    course.removeAttribute('data-schedule-mate-processed');
-    // Update UI for this course
-    updateCourseUI(course);
-  });
-  
-  // Find the parent container again after processing
-  const parentContainer = courseContainers[0].parentElement;
-  if (!parentContainer) {
-    console.log('ScheduleMate: Cannot find parent container');
-    hideNotification();
-    showNotification('Error: Cannot find course container', 3000);
-    return;
-  }
-  
-  // Create an array of the course elements to sort
-  const coursesArray = Array.from(courseContainers);
-  
-  // Define color priority (1 = highest, 4 = lowest)
-  const getColorPriority = (course) => {
-    if (course.classList.contains('schedule-mate-available')) return 1; // Green (Available) - highest priority
-    if (course.classList.contains('schedule-mate-full')) return 2;      // Yellow (Full)
-    if (course.classList.contains('schedule-mate-conflict')) return 3;  // Red (Conflict)
-    if (course.classList.contains('schedule-mate-blue')) return 4;      // Blue (In Schedule) - lowest priority
-    return 5; // No color class - lowest priority
-  };
-  
-  // Sort the courses by their color priority
-  coursesArray.sort((a, b) => {
-    const priorityA = getColorPriority(a);
-    const priorityB = getColorPriority(b);
-    return priorityA - priorityB;
-  });
-  
-  // Reorder the elements in the DOM without destroying and recreating them
-  // This preserves event listeners and added elements like RMP ratings
-  
-  // Create a document fragment to minimize reflow
-  const fragment = document.createDocumentFragment();
-  
-  // Append each course to the fragment in the sorted order
-  coursesArray.forEach(course => {
-    fragment.appendChild(course);
-  });
-  
-  // Append all courses back to the parent container at once
-  parentContainer.appendChild(fragment);
-  
-  // Collapse all course details to make the page more manageable
-  collapseAllCourseDetails();
-  
-  // Scroll back to the top of the page
-  window.scrollTo({
-    top: 0,
-    behavior: 'smooth'
-  });
-  
-  console.log('ScheduleMate: Courses sorted by color successfully');
-  
-  // Hide loading notification and show success
-  hideNotification();
-  showNotification('Courses sorted by color: Available → Full → Conflict → In Schedule', 3000);
-}
 
 // Force load all courses by scrolling to the bottom
 function forceLoadAllCourses() {

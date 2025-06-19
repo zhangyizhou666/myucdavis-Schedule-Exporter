@@ -2,41 +2,29 @@
 document.addEventListener('DOMContentLoaded', function() {
   // Load user preferences
   chrome.storage.sync.get({
-    conflictDetection: true,
-    colorCoding: true,
     rmpIntegration: true,
     earlyMorningWarning: true,
     registeredOnly: true
   }, function(items) {
-    document.getElementById('conflictDetection').checked = items.conflictDetection;
-    document.getElementById('colorCoding').checked = items.colorCoding;
     document.getElementById('rmpIntegration').checked = items.rmpIntegration;
     document.getElementById('earlyMorningWarning').checked = items.earlyMorningWarning;
     document.getElementById('registeredOnly').checked = items.registeredOnly;
     
     // Set all features toggle based on all other toggles being checked
     document.getElementById('allFeatures').checked = 
-      items.conflictDetection && 
-      items.colorCoding && 
       items.rmpIntegration && 
       items.earlyMorningWarning;
   });
 
   // Save preferences when toggles change
-  document.getElementById('conflictDetection').addEventListener('change', saveOptions);
-  document.getElementById('colorCoding').addEventListener('change', saveOptions);
   document.getElementById('rmpIntegration').addEventListener('change', saveOptions);
   document.getElementById('earlyMorningWarning').addEventListener('change', saveOptions);
   document.getElementById('registeredOnly').addEventListener('change', saveOptions);
 
   // Apply preferences immediately when changed
-  document.getElementById('conflictDetection').addEventListener('change', updateAllFeaturesToggle);
-  document.getElementById('colorCoding').addEventListener('change', updateAllFeaturesToggle);
   document.getElementById('rmpIntegration').addEventListener('change', updateAllFeaturesToggle);
   document.getElementById('earlyMorningWarning').addEventListener('change', updateAllFeaturesToggle);
   
-  document.getElementById('conflictDetection').addEventListener('change', applyPreferences);
-  document.getElementById('colorCoding').addEventListener('change', applyPreferences);
   document.getElementById('rmpIntegration').addEventListener('change', applyPreferences);
   document.getElementById('earlyMorningWarning').addEventListener('change', applyPreferences);
   
@@ -45,8 +33,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const isChecked = e.target.checked;
     
     // Update all feature toggles
-    document.getElementById('conflictDetection').checked = isChecked;
-    document.getElementById('colorCoding').checked = isChecked;
     document.getElementById('rmpIntegration').checked = isChecked;
     document.getElementById('earlyMorningWarning').checked = isChecked;
     
@@ -58,8 +44,6 @@ document.addEventListener('DOMContentLoaded', function() {
   // Helper function to update the all features toggle
   function updateAllFeaturesToggle() {
     const allChecked = 
-      document.getElementById('conflictDetection').checked && 
-      document.getElementById('colorCoding').checked && 
       document.getElementById('rmpIntegration').checked && 
       document.getElementById('earlyMorningWarning').checked;
       
@@ -80,8 +64,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function saveOptions() {
   chrome.storage.sync.set({
-    conflictDetection: document.getElementById('conflictDetection').checked,
-    colorCoding: document.getElementById('colorCoding').checked,
     rmpIntegration: document.getElementById('rmpIntegration').checked,
     earlyMorningWarning: document.getElementById('earlyMorningWarning').checked,
     registeredOnly: document.getElementById('registeredOnly').checked
@@ -90,8 +72,6 @@ function saveOptions() {
 
 function applyPreferences() {
   const preferences = {
-    conflictDetection: document.getElementById('conflictDetection').checked,
-    colorCoding: document.getElementById('colorCoding').checked,
     rmpIntegration: document.getElementById('rmpIntegration').checked,
     earlyMorningWarning: document.getElementById('earlyMorningWarning').checked
   };

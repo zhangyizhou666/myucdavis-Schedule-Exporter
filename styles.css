@@ -1,80 +1,179 @@
-/* Schedule Mate Styles */
-.schedule-mate-blue {
-    background-color: rgb(207, 228, 255) !important;
-  }
-  
-  .schedule-mate-red {
-    background-color: rgb(255, 220, 220) !important;
-  }
-  
-  .schedule-mate-yellow {
-    background-color: rgb(255, 244, 112) !important;
-  }
-  
-  .schedule-mate-green {
-    background-color: rgb(206, 255, 206) !important;
-  }
-  
-  .schedule-mate-conflict-tooltip {
-    position: relative;
-    display: inline-block;
-  }
-  
-  .schedule-mate-conflict-tooltip:hover .schedule-mate-tooltip-text {
-    visibility: visible;
-    opacity: 1;
-  }
-  
-  .schedule-mate-tooltip-text {
-    visibility: hidden;
-    width: 200px;
-    background-color: #002855;
-    color: #fff;
-    text-align: center;
-    border-radius: 6px;
-    padding: 5px;
-    position: absolute;
-    z-index: 1000;
-    bottom: 125%;
-    left: 50%;
-    margin-left: -100px;
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-  
-  .schedule-mate-tooltip-text::after {
-    content: "";
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    margin-left: -5px;
-    border-width: 5px;
-    border-style: solid;
-    border-color: #002855 transparent transparent transparent;
-  }
-  
-  .schedule-mate-early-morning {
-    position: relative;
-  }
-  
-  .schedule-mate-early-morning::before {
-    content: "⏰";
-    position: absolute;
-    left: -20px;
-    font-size: 16px;
-  }
-  
-  .schedule-mate-rating {
-    display: inline-block;
-    margin-left: 10px;
-    font-weight: bold;
-  }
-  
-  .schedule-mate-rating-quality {
-    color: #002855;
-  }
-  
-  .schedule-mate-rating-difficulty {
-    color: #777;
-    margin-left: 5px;
-  }
+/* Schedule Mate Styles - Simplified for RMP and Early/Late warnings only */
+
+/* Early/Late class indicators */
+.schedule-mate-early-morning {
+  position: relative;
+}
+
+.schedule-mate-early-morning::before {
+  content: "⏰";
+  position: absolute;
+  left: -20px;
+  font-size: 16px;
+}
+
+.schedule-mate-early-morning-indicator {
+  background-color: #e6f7ff !important;
+  border: 1px solid #91d5ff !important;
+  color: #0050b3 !important;
+  display: inline-block !important;
+  margin-left: 5px !important;
+  font-size: 12px !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  font-weight: bold !important;
+}
+
+.schedule-mate-late-night-indicator {
+  background-color: #f9f0ff !important;
+  border: 1px solid #d3adf7 !important;
+  color: #531dab !important;
+  display: inline-block !important;
+  margin-left: 5px !important;
+  font-size: 12px !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  font-weight: bold !important;
+}
+
+/* RMP Rating styles */
+.schedule-mate-rating {
+  display: inline-block;
+  margin-left: 10px;
+  font-weight: bold;
+  margin-left: 8px !important;
+  font-size: 12px !important;
+  border-radius: 4px !important;
+  padding: 2px 6px !important;
+  white-space: nowrap !important;
+}
+
+.schedule-mate-rating-found {
+  background-color: #f8f9fa !important;
+  border: 1px solid #ddd !important;
+}
+
+.schedule-mate-rating-not-found {
+  background-color: #f8f9fa !important;
+  border: 1px solid #ddd !important;
+  opacity: 0.8 !important;
+}
+
+.schedule-mate-rating-quality {
+  color: #28a745 !important;
+  font-weight: bold !important;
+}
+
+.schedule-mate-rating-difficulty {
+  color: #dc3545 !important;
+  font-weight: bold !important;
+}
+
+.schedule-mate-take-again {
+  color: #007bff !important;
+  font-weight: bold !important;
+}
+
+.schedule-mate-rmp-link {
+  color: #6c757d !important;
+  text-decoration: none !important;
+  font-weight: bold !important;
+  transition: color 0.2s !important;
+}
+
+.schedule-mate-rmp-link:hover {
+  color: #0056b3 !important;
+  text-decoration: underline !important;
+}
+
+/* Sort by Rating button styling - Collapsible Design */
+.schedule-mate-sort-rating-button {
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 20px !important;
+  background-color: #6c43c0 !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 50px !important;
+  padding: 12px 20px !important;
+  font-size: 14px !important;
+  font-weight: bold !important;
+  cursor: pointer !important;
+  z-index: 1000 !important;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.3) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  min-width: 50px !important;
+  height: 50px !important;
+}
+
+/* Collapsed state - only show star icon */
+.schedule-mate-sort-rating-button.collapsed {
+  width: 50px !important;
+  padding: 12px !important;
+  border-radius: 50% !important;
+  background-color: rgba(108, 67, 192, 0.4) !important; /* Semi-transparent */
+  opacity: 0.7 !important;
+}
+
+/* Expanded state - show full button */
+.schedule-mate-sort-rating-button.expanded {
+  width: auto !important;
+  padding: 12px 20px !important;
+  border-radius: 50px !important;
+  background-color: #6c43c0 !important; /* Full color when expanded */
+  opacity: 1 !important;
+}
+
+/* Hover effects */
+.schedule-mate-sort-rating-button.collapsed:hover {
+  background-color: #6c43c0 !important; /* Full purple on hover */
+  opacity: 1 !important;
+  transform: translateY(-2px) scale(1.05) !important;
+  box-shadow: 0 4px 12px rgba(108, 67, 192, 0.4) !important;
+}
+
+.schedule-mate-sort-rating-button.expanded:hover {
+  background-color: #5537a3 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
+}
+
+/* Icon styling */
+.schedule-mate-sort-rating-button .button-icon {
+  font-size: 18px !important;
+  transition: margin 0.3s ease !important;
+  flex-shrink: 0 !important;
+}
+
+/* Text styling */
+.schedule-mate-sort-rating-button .button-text {
+  margin-left: 8px !important;
+  font-size: 14px !important;
+  font-weight: bold !important;
+  opacity: 1 !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  white-space: nowrap !important;
+}
+
+/* Hide text in collapsed state */
+.schedule-mate-sort-rating-button.collapsed .button-text {
+  opacity: 0 !important;
+  width: 0 !important;
+  margin-left: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Show text in expanded state */
+.schedule-mate-sort-rating-button.expanded .button-text {
+  opacity: 1 !important;
+  width: auto !important;
+  margin-left: 8px !important;
+}
+
+/* Removed pulse animation - using semi-transparent static state instead */
+
