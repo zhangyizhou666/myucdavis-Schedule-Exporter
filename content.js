@@ -105,11 +105,14 @@ function completeInitialization() {
     // Note: RMP data display will be triggered by the loadRMPData function itself
     }
     
-    // Apply visual updates
-    updateUI();
-  
+      // Apply visual updates
+  updateUI();
+
   // Add the sort button
   addSortButton();
+  
+  // Add simple export button (like friend's design)
+  addSimpleExportButton();
   
   // Add a mutation observer to handle dynamically added content
   addDynamicContentObserver();
@@ -816,9 +819,9 @@ function getQuarterDates() {
   if (!termSelectorElement) {
     console.log('Term selector not found, using default dates');
     return {
-      startDate: '20250331', // Default: March 31, 2025 (Spring Quarter begins)
-      endDate: '20250605',   // Default: June 5, 2025 (Spring Instruction ends)
-      untilDate: '20250605T235959Z' // Default until date
+      startDate: '20250924', // Default: September 24, 2025 (Fall Quarter begins)
+      endDate: '20251205',   // Default: December 5, 2025 (Fall Instruction ends)
+      untilDate: '20251205T235959Z' // Default until date
     };
   }
   
@@ -833,20 +836,6 @@ function getQuarterDates() {
       untilDate: '20250605T235959Z'
     };
   } 
-  else if (termText.includes('Winter') && termText.includes('2025')) {
-    return {
-      startDate: '20250106', // January 6, 2025 (Winter Instruction begins)
-      endDate: '20250314',   // March 14, 2025 (Winter Instruction ends)
-      untilDate: '20250314T235959Z'
-    };
-  }
-  else if (termText.includes('Fall') && termText.includes('2024')) {
-    return {
-      startDate: '20240925', // September 25, 2024 (Fall Instruction begins)
-      endDate: '20241206',   // December 6, 2024 (Fall Instruction ends)
-      untilDate: '20241206T235959Z'
-    };
-  }
   else if (termText.includes('Fall') && termText.includes('2025')) {
     return {
       startDate: '20250924', // September 24, 2025 (Fall Instruction begins)
@@ -854,11 +843,25 @@ function getQuarterDates() {
       untilDate: '20251205T235959Z'
     };
   }
-  // Default to Spring 2025 if no match
+  else if (termText.includes('Winter') && termText.includes('2026')) {
+    return {
+      startDate: '20260105', // January 5, 2026 (Winter Instruction begins)
+      endDate: '20260313',   // March 13, 2026 (Winter Instruction ends)
+      untilDate: '20260313T235959Z'
+    };
+  }
+  else if (termText.includes('Spring') && termText.includes('2026')) {
+    return {
+      startDate: '20260330', // March 30, 2026 (Spring Instruction begins)
+      endDate: '20260604',   // June 4, 2026 (Spring Instruction ends)
+      untilDate: '20260604T235959Z'
+    };
+  }
+  // Default to Fall 2025 if no match (most current upcoming term)
   return {
-    startDate: '20250331', // March 31, 2025 (Spring Instruction begins)
-    endDate: '20250605',   // June 5, 2025 (Spring Instruction ends)
-    untilDate: '20250605T235959Z'
+    startDate: '20250924', // September 24, 2025 (Fall Instruction begins)
+    endDate: '20251205',   // December 5, 2025 (Fall Instruction ends)
+    untilDate: '20251205T235959Z'
   };
 }
 
@@ -1572,4 +1575,150 @@ function processSortCoursesByRating() {
   // Hide loading notification and show success
   hideNotification();
   showNotification('Courses sorted by professor rating (highest first)', 3000);
+}
+
+// Add simple export button to page (like friend's design)
+function addSimpleExportButton() {
+  // Check if we're on the schedule builder page and if button doesn't already exist
+  if (!window.location.href.includes('my.ucdavis.edu/schedulebuilder') ||
+      document.querySelector('.schedule-mate-simple-export-button')) {
+    return;
+  }
+
+  // Create button container using same approach as friend's code
+  var div = document.createElement("div");
+  div.className = "dropdown inline schedule-mate-simple-export-button";
+  
+  var button = document.createElement("button");
+  button.className = "btn btn-mini white-on-navyblue";
+  button.appendChild(document.createTextNode("Export!"));
+  
+  // Add click handler that calls our existing export logic
+  button.addEventListener("click", function() {
+    console.log('ScheduleMate: Simple export button clicked');
+    
+    // Call our existing export functionality
+    const events = extractEventsFromPage({
+      registeredOnly: true, // Default to registered only
+      debug: true
+    });
+    
+    if (!events || events.length === 0) {
+      console.log('ScheduleMate: No events found for export');
+      alert('No schedule events found to export. Make sure you have courses in your schedule.');
+      return;
+    }
+    
+    console.log(`ScheduleMate: Found ${events.length} events, generating ICS file`);
+    
+    // Generate ICS content using simplified logic
+    const icsContent = generateSimpleICS(events);
+    
+    // Create and trigger download
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "ucdavis-schedule.ics";
+    link.click();
+    
+    // Clean up
+    URL.revokeObjectURL(url);
+    
+    console.log('ScheduleMate: ICS file download triggered');
+  });
+  
+  div.appendChild(button);
+
+  // Find parent element using same approach as friend's code
+  var parent = document.getElementsByClassName("menu active")[0] || 
+               document.getElementsByClassName("menu active")[1];
+               
+  if (parent) {
+    parent.appendChild(div);
+    console.log('ScheduleMate: Simple export button added to page');
+  } else {
+    console.log('ScheduleMate: Could not find menu parent element for simple export button');
+  }
+}
+
+// Simple ICS generator (reusing our existing logic)
+function generateSimpleICS(events) {
+  let icsContent = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Schedule Mate//UC Davis Schedule//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH'
+  ];
+
+  events.forEach(event => {
+    if (event.type === 'recurring') {
+      // Convert days to correct format
+      const dayMap = { 'M': 'MO', 'T': 'TU', 'W': 'WE', 'R': 'TH', 'F': 'FR' };
+      
+      // For each day the class meets
+      event.days.forEach(day => {
+        // Calculate days to add based on the day of the week
+        const daysToAdd = {
+          'M': 0,
+          'T': 1,
+          'W': 2,
+          'R': 3,
+          'F': 4
+        }[day];
+        
+        // Parse the quarter start date
+        const year = parseInt(event.quarterStart.substring(0, 4));
+        const month = parseInt(event.quarterStart.substring(4, 6)) - 1; // 0-based months
+        const date = parseInt(event.quarterStart.substring(6, 8));
+        
+        // Create base date for first Monday of the quarter
+        const baseDate = new Date(year, month, date);
+        
+        // Adjust for classes that start on different days of the week
+        const startDayOfWeek = baseDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+        let adjustedDaysToAdd = daysToAdd;
+        
+        if (startDayOfWeek !== 1) { // If not Monday
+          const daysToNextMonday = (8 - startDayOfWeek) % 7; // Days to next Monday
+          adjustedDaysToAdd = (daysToAdd + daysToNextMonday) % 7;
+        }
+        
+        const startDate = new Date(baseDate);
+        startDate.setDate(startDate.getDate() + adjustedDaysToAdd);
+        
+        const [startHours, startMinutes] = event.startTime.split(':').map(Number);
+        const [endHours, endMinutes] = event.endTime.split(':').map(Number);
+        
+        startDate.setHours(startHours, startMinutes);
+        const endDate = new Date(startDate);
+        endDate.setHours(endHours, endMinutes);
+
+        icsContent = icsContent.concat([
+          'BEGIN:VEVENT',
+          `SUMMARY:${event.summary}`,
+          `DESCRIPTION:${event.description}`,
+          `RRULE:FREQ=WEEKLY;UNTIL=${event.until};BYDAY=${dayMap[day]}`,
+          `DTSTART;TZID=America/Los_Angeles:${formatLocalDateTimeSimple(startDate)}`,
+          `DTEND;TZID=America/Los_Angeles:${formatLocalDateTimeSimple(endDate)}`,
+          `LOCATION:${event.location}`,
+          'END:VEVENT'
+        ]);
+      });
+    }
+  });
+
+  icsContent.push('END:VCALENDAR');
+  return icsContent.join('\r\n');
+}
+
+function formatLocalDateTimeSimple(date) {
+  return date.getFullYear() +
+    (date.getMonth() + 1).toString().padStart(2, '0') +
+    date.getDate().toString().padStart(2, '0') + 
+    'T' +
+    date.getHours().toString().padStart(2, '0') +
+    date.getMinutes().toString().padStart(2, '0') +
+    '00';
 }
